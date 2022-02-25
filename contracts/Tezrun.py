@@ -5,8 +5,9 @@ class Tezrun(sp.Contract):
         self.name = "Tezrun"
         self.init(
             owner = owner,
-            raceId = 0,
             raceState = False,
+            raceId = 0,
+            winner = 0,
             bets = sp.big_map(tvalue = 
                 sp.TRecord(raceId = sp.TNat, horseId = sp.TNat, payout = sp.TNat, amount = sp.TMutez))
         )
@@ -16,11 +17,13 @@ class Tezrun(sp.Contract):
         sp.verify(self.is_owner(sp.sender))
         self.data.raceId += 1
         self.data.raceState = True
+        self.data.winner = 0
 
     @sp.entry_point
-    def finishRace(self):
+    def finishRace(self, winner):
         sp.verify(self.is_owner(sp.sender))
         self.data.raceState = False
+        self.data.winner = winner
 
     @sp.entry_point
     def placeBet(self, params):
@@ -70,5 +73,7 @@ if "templates" not in __name__:
 
         c1.placeBet(raceId = 1, horseId = 2, payout = 3).run(sender = alice, amount = sp.tez(10))
 
-        c1.finishRace().run(sender = admin)
+        winner = 2
+        c1.finishRace(winner).run(sender = admin)
         scenario.verify(c1.data.raceState == False)
+        scenario.verify(c1.data.winner == winner)
