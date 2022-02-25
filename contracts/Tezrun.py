@@ -78,14 +78,17 @@ if "templates" not in __name__:
         c1 = Tezrun(admin.address)
         scenario += c1
 
+        raceId = 1
+
         scenario.h1("Entry points")
         c1.startRace().run(sender = admin)
-        scenario.verify(c1.data.raceId == 1)
+        scenario.verify(c1.data.raceId == raceId)
         scenario.verify(c1.data.raceState == True)
 
-        scenario.h1("Place Bet")
-        c1.placeBet(raceId = 1, horseId = 1, payout = 3).run(sender = alice, amount = sp.tez(10))
-        c1.placeBet(raceId = 1, horseId = 2, payout = 3).run(sender = alice, amount = sp.tez(20))
+        scenario.h1("Place Bet")        
+        c1.placeBet(raceId = raceId, horseId = 1, payout = 3).run(sender = alice, amount = sp.tez(10))
+        c1.placeBet(raceId = raceId, horseId = 2, payout = 3).run(sender = alice, amount = sp.tez(20))
+        scenario.verify(sp.len(c1.data.bets[alice.address][raceId]) == 2)
 
         winner = 2
         c1.finishRace(winner).run(sender = admin)
