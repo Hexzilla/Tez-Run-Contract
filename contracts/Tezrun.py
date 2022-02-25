@@ -8,8 +8,10 @@ class Tezrun(sp.Contract):
             raceState = False,
             raceId = 0,
             winner = 0,
-            bets = sp.big_map(tvalue = 
-                sp.TRecord(raceId = sp.TNat, horseId = sp.TNat, payout = sp.TNat, amount = sp.TMutez))
+            bets = sp.big_map(
+                tvalue = sp.TMap(
+                    sp.TNat, 
+                    sp.TList(sp.TRecord(horseId = sp.TNat, payout = sp.TNat, amount = sp.TMutez))))
         )
 
     @sp.entry_point
@@ -29,15 +31,20 @@ class Tezrun(sp.Contract):
     def placeBet(self, params):
         sp.set_type(params, sp.TRecord(raceId = sp.TNat, horseId = sp.TNat, payout = sp.TNat))      
 
-        sp.verify(self.data.raceId == params.raceId, "Invalid Race ID")
+        raceId = self.data.raceId
+        sp.verify(raceId == params.raceId, "Invalid Race ID")
         sp.verify(sp.amount > sp.tez(0), "Invalid Amount")
         sp.send(self.data.owner, sp.amount)
 
-        self.data.bets[sp.sender] = sp.record(
-            raceId = params.raceId,
+        record = sp.record(
             horseId = params.horseId,
             payout = params.payout,
             amount = sp.amount)
+
+        sp.if ~ self.data.bets.contains(sp.sender):
+            self.data.bets[sp.sender] = { raceId: sp.list([]) }
+
+        self.data.bets[sp.sender][raceId].push(record)
 
     @sp.entry_point
     def takeReward(self):
@@ -78,7 +85,7 @@ if "templates" not in __name__:
 
         scenario.h1("Place Bet")
         c1.placeBet(raceId = 1, horseId = 1, payout = 3).run(sender = alice, amount = sp.tez(10))
-        c1.placeBet(raceId = 1, horseId = 2, payout = 3).run(sender = alice, amount = sp.tez(10))
+        c1.placeBet(raceId = 1, horseId = 2, payout = 3).run(sender = alice, amount = sp.tez(20))
 
         winner = 2
         c1.finishRace(winner).run(sender = admin)
