@@ -29,7 +29,8 @@ class Tezrun(sp.Contract):
     def placeBet(self, params):
         sp.set_type(params, sp.TRecord(raceId = sp.TNat, horseId = sp.TNat, payout = sp.TNat))      
 
-        sp.verify(sp.amount > sp.tez(0), "Invalid amount")
+        sp.verify(self.data.raceId == params.raceId, "Invalid Race ID")
+        sp.verify(sp.amount > sp.tez(0), "Invalid Amount")
         sp.send(self.data.owner, sp.amount)
 
         self.data.bets[sp.sender] = sp.record(
@@ -37,6 +38,10 @@ class Tezrun(sp.Contract):
             horseId = params.horseId,
             payout = params.payout,
             amount = sp.amount)
+
+    @sp.entry_point
+    def takeReward(self):
+        pass
 
     # this is not part of the standard but can be supported through inheritance.
     def is_paused(self):
@@ -71,6 +76,8 @@ if "templates" not in __name__:
         scenario.verify(c1.data.raceId == 1)
         scenario.verify(c1.data.raceState == True)
 
+        scenario.h1("Place Bet")
+        c1.placeBet(raceId = 1, horseId = 1, payout = 3).run(sender = alice, amount = sp.tez(10))
         c1.placeBet(raceId = 1, horseId = 2, payout = 3).run(sender = alice, amount = sp.tez(10))
 
         winner = 2
