@@ -43,13 +43,14 @@ class Tezrun(sp.Contract):
     def placeBet(self, params):
         sp.set_type(params, sp.TRecord(raceId = sp.TNat, horseId = sp.TNat, payout = sp.TNat))      
 
-        raceId = self.data.raceId
-        sp.verify(raceId == params.raceId, "Invalid Race ID")
+        sp.verify(self.data.raceState == 2, "Race is not started")
+        sp.verify(self.data.raceId == params.raceId, "Invalid Race ID")
         sp.verify(sp.amount > sp.tez(0), "Invalid Amount")
+        
         sp.send(self.data.owner, sp.amount)
 
         record = sp.record(
-            raceId = raceId,
+            raceId = self.data.raceId,
             horseId = params.horseId,
             payout = params.payout,
             amount = sp.amount)
@@ -66,11 +67,14 @@ class Tezrun(sp.Contract):
         sp.verify(self.data.winner != 0)
         sp.verify(self.data.bets.contains(sp.sender))
         
+        rewards = 0
         records = self.data.bets[sp.sender]
         sp.for x in records:
             sp.if x.raceId == raceId and x.horseId == self.data.winner:
-                rewards = sp.split_tokens(x.amount, x.payout, 1)
-                sp.send(sp.sender, rewards)
+                rewards += sp.split_tokens(x.amount, x.payout, 1)
+        
+        sp.if rewards > 0:
+            sp.send(sp.sender, rewards)
 
 
     # this is not part of the standard but can be supported through inheritance.
