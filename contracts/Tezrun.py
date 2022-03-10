@@ -63,18 +63,20 @@ class Tezrun(sp.Contract):
 
     @sp.entry_point
     def takeReward(self):
-        raceId = self.data.raceId
         sp.verify(self.data.winner != 0)
         sp.verify(self.data.bets.contains(sp.sender))
         
-        rewards = 0
+        rewards = sp.local("rewards", sp.mutez(0))
+
         records = self.data.bets[sp.sender]
         sp.for x in records:
-            sp.if x.raceId == raceId and x.horseId == self.data.winner:
-                rewards += sp.split_tokens(x.amount, x.payout, 1)
-        
-        sp.if rewards > 0:
-            sp.send(sp.sender, rewards)
+            sp.if x.raceId == self.data.raceId:
+                sp.if x.horseId == self.data.winner:
+                    rewards.value += sp.split_tokens(x.amount, x.payout, 1)
+
+        sp.if rewards.value > sp.mutez(0):
+            sp.if sp.balance > rewards.value:
+                sp.send(sp.sender, rewards.value)
 
 
     # this is not part of the standard but can be supported through inheritance.
@@ -117,7 +119,7 @@ if "templates" not in __name__:
         scenario.h1("Place Bet")        
         c1.placeBet(raceId = raceId, horseId = 1, payout = 3).run(sender = alice, amount = sp.mutez(20))
         c1.placeBet(raceId = raceId, horseId = 2, payout = 3).run(sender = alice, amount = sp.mutez(10))
-        scenario.verify(sp.len(c1.data.bets[alice.address][raceId]) == 2)
+        scenario.verify(sp.len(c1.data.bets[alice.address]) == 2)
 
         scenario.h1("Finish Race")
         winner = 2
@@ -126,7 +128,7 @@ if "templates" not in __name__:
         scenario.verify(c1.data.winner == winner)
 
         scenario.h1("Take Reward")        
-        c1.takeReward().run(sender = alice, valid = False)
+        c1.takeReward().run(sender = alice)
 
     """@sp.add_test(name = "FA12")
     def test():
