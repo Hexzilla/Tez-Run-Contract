@@ -10,9 +10,8 @@ class Tezrun(sp.Contract):
             raceId = 0,
             winner = 0,
             bets = sp.big_map(
-                tvalue = sp.TMap(
-                    sp.TNat, 
-                    sp.TList(sp.TRecord(horseId = sp.TNat, payout = sp.TNat, amount = sp.TMutez))))
+                tvalue = sp.TList(
+                    sp.TRecord(raceId = sp.TNat, horseId = sp.TNat, payout = sp.TNat, amount = sp.TMutez)))
         )
 
     @sp.entry_point
@@ -50,27 +49,34 @@ class Tezrun(sp.Contract):
         sp.send(self.data.owner, sp.amount)
 
         record = sp.record(
+            raceId = raceId,
             horseId = params.horseId,
             payout = params.payout,
             amount = sp.amount)
 
         sp.if ~ self.data.bets.contains(sp.sender):
-            self.data.bets[sp.sender] = { raceId: sp.list([]) }
+            self.data.bets[sp.sender] = sp.list([])
 
-        self.data.bets[sp.sender][raceId].push(record)
+        self.data.bets[sp.sender].push(record)
+
 
     @sp.entry_point
     def takeReward(self):
         raceId = self.data.raceId
+        sp.verify(self.data.winner != 0)
         sp.verify(self.data.bets.contains(sp.sender))
-        sp.verify(self.data.bets[sp.sender].contains(raceId))
         
-        records = self.data.bets[sp.sender][raceId]
+        records = self.data.bets[sp.sender]
         sp.for x in records:
-            sp.if x.horseId == self.data.winner:
+            sp.if x.raceId == raceId and x.horseId == self.data.winner:
                 rewards = sp.split_tokens(x.amount, x.payout, 1)
                 sp.send(sp.sender, rewards)
 
+
+    @sp.entry_point
+    def getRandom(self):
+        c = sp.contract(sp.TInt, "KT1QguqbBmdP5CoMkevq7anUZJxu6AbsmZ5p", entry_point = "getValue").open_some()
+        sp.transfer(-42, sp.mutez(0), c)
 
     # this is not part of the standard but can be supported through inheritance.
     def is_paused(self):
@@ -87,7 +93,7 @@ if "templates" not in __name__:
         scenario = sp.test_scenario()
         scenario.h1("Tezrun")
         
-        admin = sp.address("tz1NvdDA5jtTNmRZD94ZUWP7dBwARStrQcFM")
+        admin = sp.address("tz1hmPbNNcaH91bkrYDeyAbUmYzjbPtJjPQR")#("tz1NvdDA5jtTNmRZD94ZUWP7dBwARStrQcFM")
         alice = sp.test_account("Alice")
         bob   = sp.test_account("Robert")
 
