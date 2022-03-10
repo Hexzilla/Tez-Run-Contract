@@ -73,11 +73,6 @@ class Tezrun(sp.Contract):
                 sp.send(sp.sender, rewards)
 
 
-    @sp.entry_point
-    def getRandom(self):
-        c = sp.contract(sp.TInt, "KT1QguqbBmdP5CoMkevq7anUZJxu6AbsmZ5p", entry_point = "getValue").open_some()
-        sp.transfer(-42, sp.mutez(0), c)
-
     # this is not part of the standard but can be supported through inheritance.
     def is_paused(self):
         return sp.bool(False)
