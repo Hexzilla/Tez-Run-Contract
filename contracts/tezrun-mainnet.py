@@ -1,8 +1,8 @@
 import smartpy as sp
 
 class Constants:
-    ADMINISTRATOR = "tz1hmPbNNcaH91bkrYDeyAbUmYzjbPtJjPQR"
-    CONTRACT_UUSD = "KT1QEzbqE3pdb1G7TzV3P7gs1A8YtMvdNLWU"
+    ADMINISTRATOR = "tz1LFGoM2YyYekx1NwnNKGajzY4ZC2Cr6CPp"
+    CONTRACT_UUSD = "KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW"
     TOKEN_UUSD = 1
 
 
@@ -85,13 +85,18 @@ class Tezrun(sp.Contract):
         sp.verify(params.amount > 0, "Invalid Amount")
 
         c = sp.contract(
-            t_transfer,
+            t_transfer_params,
             sp.address(Constants.CONTRACT_UUSD),
             entry_point = "transfer"
         ).open_some()
 
         sp.transfer(
-            sp.record(from_ = sp.sender, to_ = sp.self_address, value = params.amount),
+            [
+                sp.record(
+                    from_=sp.sender,
+                    txs=[sp.record(to_=sp.self_address, amount=params.amount, token_id=0)],
+                ),
+            ]
             sp.mutez(0),
             c
         )
@@ -138,13 +143,18 @@ class Tezrun(sp.Contract):
 
         sp.if tokens.value > 0:
             c = sp.contract(
-                t_transfer,
+                t_transfer_params,
                 sp.address(Constants.CONTRACT_UUSD),
                 entry_point = "transfer"
             ).open_some()
 
             sp.transfer(
-                sp.record(from_ = sp.self_address, to_ = sp.sender, value = tokens.value),
+                [
+                    sp.record(
+                        from_=sp.self_address,
+                        txs=[sp.record(to_=sp.sender, amount=tokens.value, token_id=0)],
+                    ),
+                ]
                 sp.mutez(0),
                 c
             )
@@ -190,9 +200,18 @@ class Tezrun(sp.Contract):
         return sender == self.data.admin
 
 
-t_transfer = sp.TRecord(
-    from_ = sp.TAddress, to_ = sp.TAddress, value = sp.TNat
-).layout(("from_ as from", ("to_ as to", "value")))      
+t_transfer_batch = sp.TRecord(
+    from_=sp.TAddress,
+    txs=sp.TList(
+        sp.TRecord(
+            to_=sp.TAddress,
+            token_id=sp.TNat,
+            amount=sp.TNat,
+        ).layout(("to_", ("token_id", "amount")))
+    ),
+).layout(("from_", "txs"))
+
+t_transfer_params = sp.TList(t_transfer_batch)
 
 
 if "templates" not in __name__:
