@@ -11,9 +11,9 @@ class Tezrun(sp.Contract):
         self.name = "Tezrun"
         self.init(
             admin = admin,
-            raceState = 0,
+            raceState = 2,
             startTime = sp.timestamp(0),
-            raceId = 0,
+            raceId = 1,
             winner = 0,
             bets = sp.big_map(tvalue = sp.TList(
                 sp.TRecord(
@@ -49,7 +49,7 @@ class Tezrun(sp.Contract):
     def finishRace(self, winner):
         sp.verify(self.is_admin(sp.sender))
         sp.verify(self.data.raceState == 2)
-        self.data.raceState = 0
+        self.data.raceState = 3
         self.data.startTime = sp.timestamp(0)
         self.data.winner = winner
 
@@ -84,15 +84,16 @@ class Tezrun(sp.Contract):
         sp.verify(params.token == Constants.TOKEN_UUSD, "Invalid Token")
         sp.verify(params.amount > 0, "Invalid Amount")
 
-        contract = sp.contract(
-            sp.TRecord(from_ = sp.TAddress, to_ = sp.TAddress, value = sp.TNat),
+        c = sp.contract(
+            t_transfer,
             sp.address(Constants.CONTRACT_UUSD),
             entry_point = "transfer"
         ).open_some()
 
         sp.transfer(
-            sp.record(from_ = sp.sender, to_ = self.data.admin, value = params.amount), sp.mutez(0),
-            contract
+            sp.record(from_ = sp.sender, to_ = sp.self_address, value = params.amount),
+            sp.mutez(0),
+            c
         )
 
         record = sp.record(
@@ -116,13 +117,13 @@ class Tezrun(sp.Contract):
 
     @sp.entry_point
     def takeReward(self):
+        sp.verify(self.data.raceState == 3, "Race is not finished")
         sp.verify(self.data.winner != 0)
         sp.verify(self.data.bets.contains(sp.sender))
 
         rewards = sp.local("rewards", sp.mutez(0))
         tokens = sp.local("tokens", 0)
 
-        # check bets by tezos.
         sp.for bet in self.data.bets[sp.sender]:
             sp.if self.is_rewardable(bet):
                 sp.if self.is_token(bet):
@@ -133,34 +134,44 @@ class Tezrun(sp.Contract):
         sp.if rewards.value > sp.mutez(0):
             sp.if sp.balance > rewards.value:
                 sp.send(sp.sender, rewards.value)
-
-                sp.for bet in self.data.bets[sp.sender]:
-                    sp.if self.is_rewardable(bet):
-                        sp.if bet.amount > sp.mutez(0):
-                            bet.rewarded = sp.bool(True)
+                self.updateRewarded(sp.sender)
 
         sp.if tokens.value > 0:
-            sp.if sp.balance > rewards.value:
-                sp.send(sp.sender, rewards.value)
+            c = sp.contract(
+                t_transfer,
+                sp.address(Constants.CONTRACT_UUSD),
+                entry_point = "transfer"
+            ).open_some()
 
-                sp.for bet in self.data.bets[sp.sender]:
-                    sp.if self.is_rewardable(bet):
-                        sp.if self.is_token(bet):
-                            bet.rewarded = sp.bool(True)
+            sp.transfer(
+                sp.record(from_ = sp.self_address, to_ = sp.sender, value = tokens.value),
+                sp.mutez(0),
+                c
+            )
+            
+            self.updateTokenRewarded(sp.sender)
 
+
+    def updateRewarded(self, address):
+        sp.for bet in self.data.bets[address]:
+            sp.if (self.is_rewardable(bet)) & (bet.amount > sp.mutez(0)):
+                bet.rewarded = sp.bool(True)
+
+    def updateTokenRewarded(self, address):
+        sp.for bet in self.data.bets[address]:
+            sp.if (self.is_rewardable(bet)) & (self.is_token(bet)):
+                bet.rewarded = sp.bool(True)
 
 
     def is_token(self, bet):
-        sp.if bet.token == Constants.TOKEN_UUSD:
-            sp.if bet.tokenAmount > 0:
-                return sp.bool(True)
+        sp.if (bet.token == Constants.TOKEN_UUSD) & (bet.tokenAmount > 0):
+            return sp.bool(True)
         return sp.bool(False) 
 
 
     def is_winner(self, bet):
-        sp.if bet.raceId == self.data.raceId:
-            sp.if bet.horseId == self.data.winner:
-                return sp.bool(True)
+        sp.if (bet.raceId == self.data.raceId) & (bet.horseId == self.data.winner):
+            return sp.bool(True)
         return sp.bool(False)
 
 
@@ -177,7 +188,12 @@ class Tezrun(sp.Contract):
     # this is not part of the standard but can be supported through inheritance.
     def is_admin(self, sender):
         return sender == self.data.admin
-      
+
+
+t_transfer = sp.TRecord(
+    from_ = sp.TAddress, to_ = sp.TAddress, value = sp.TNat
+).layout(("from_ as from", ("to_ as to", "value")))      
+
 
 if "templates" not in __name__:
     @sp.add_test(name = "FA12")
@@ -185,8 +201,8 @@ if "templates" not in __name__:
         scenario = sp.test_scenario()
         scenario.h1("Tezrun")
         
-        admin = sp.address("tz1hmPbNNcaH91bkrYDeyAbUmYzjbPtJjPQR")
-        alice = sp.test_account("Alice")
+        admin = sp.address(Constants.ADMINISTRATOR)
+        alice = sp.address("tz1NvdDA5jtTNmRZD94ZUWP7dBwARStrQcFM")
         bob   = sp.test_account("Robert")
 
         c1 = Tezrun(admin)
@@ -210,12 +226,15 @@ if "templates" not in __name__:
         scenario.h1("Place Bet")        
         c1.placeBet(raceId = raceId, horseId = 1, payout = 3).run(sender = alice, amount = sp.mutez(20))
         c1.placeBet(raceId = raceId, horseId = 2, payout = 3).run(sender = alice, amount = sp.mutez(10))
-        scenario.verify(sp.len(c1.data.bets[alice.address]) == 2)
+        scenario.verify(sp.len(c1.data.bets[alice]) == 2)
+
+        scenario.h1("Place Bet by Token")
+        c1.placeBetByToken(raceId = raceId, horseId = 1, payout = 3, token = Constants.TOKEN_UUSD, amount = 10).run(sender = alice)
 
         scenario.h1("Finish Race")
         winner = 2
         c1.finishRace(winner).run(sender = admin)
-        scenario.verify(c1.data.raceState == 0)
+        scenario.verify(c1.data.raceState == 3)
         scenario.verify(c1.data.winner == winner)
 
         scenario.h1("Take Reward")        
