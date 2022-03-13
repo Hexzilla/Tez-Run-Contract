@@ -1,1 +1,1 @@
-SmartPy.sh compile ./contracts/Tezrun.py ./build
+SmartPy.sh compile ./contracts/tezrun.py ./build
