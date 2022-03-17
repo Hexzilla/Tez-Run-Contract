@@ -17,7 +17,7 @@ class Tezrun(sp.Contract):
         self.name = "Tezrun"
         self.init(
             admin = admin,
-            raceState = State.READY,
+            raceState = State.READY, #!!!-TODO
             startTime = sp.timestamp(0),
             raceId = 1,
             winner = 0,
