@@ -63,11 +63,11 @@ class Tezrun(sp.Contract):
     def placeBet(self, params):
         sp.set_type(params, sp.TRecord(raceId = sp.TNat, horseId = sp.TNat, payout = sp.TNat))
 
-        sp.verify(self.data.raceState == State.READY, "Race is not started")
+        #sp.verify(self.data.raceState == State.READY, "Race is not started")
         sp.verify(self.data.raceId == params.raceId, "Invalid Race ID")
         sp.verify(sp.amount > sp.tez(0), "Invalid Amount")
 
-        sp.send(self.data.admin, sp.amount)
+        sp.send(sp.self_address, sp.amount)
 
         record = sp.record(
             raceId = self.data.raceId,
@@ -85,7 +85,7 @@ class Tezrun(sp.Contract):
     def placeBetByToken(self, params):
         sp.set_type(params, sp.TRecord(raceId = sp.TNat, horseId = sp.TNat, payout = sp.TNat, token = sp.TNat, amount = sp.TNat))
 
-        sp.verify(self.data.raceState == State.READY, "Race is not started")
+        #!!!sp.verify(self.data.raceState == State.READY, "Race is not started")
         sp.verify(self.data.raceId == params.raceId, "Invalid Race ID")
         sp.verify(params.token == Constants.TOKEN_UUSD, "Invalid Token")
         sp.verify(params.amount > 0, "Invalid Amount")
