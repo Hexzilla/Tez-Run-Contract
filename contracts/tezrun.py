@@ -5,13 +5,19 @@ class Constants:
     CONTRACT_UUSD = "KT1QEzbqE3pdb1G7TzV3P7gs1A8YtMvdNLWU"
     TOKEN_UUSD = 1
 
+class State:    
+    NONE = 0
+    READY = 1
+    STARTED = 2
+    FINISHED = 3
+    
 
 class Tezrun(sp.Contract):
     def __init__(self, admin):
         self.name = "Tezrun"
         self.init(
             admin = admin,
-            raceState = 2,
+            raceState = State.READY, #!!!-TODO
             startTime = sp.timestamp(0),
             raceId = 1,
             winner = 0,
@@ -30,26 +36,26 @@ class Tezrun(sp.Contract):
 
     @sp.entry_point
     def readyRace(self, readyTime):
+        #!!!sp.verify(self.is_admin(sp.sender))
         sp.verify(readyTime > 0)
-        sp.verify(self.is_admin(sp.sender))        
         self.data.raceId += 1
-        self.data.raceState = 1
+        self.data.raceState = State.READY
         self.data.startTime = sp.now.add_minutes(readyTime)
         self.data.winner = 0
 
     @sp.entry_point
     def startRace(self):
-        sp.verify(self.is_admin(sp.sender))
-        sp.verify(self.data.raceState == 1)
-        self.data.raceState = 2
+        #!!!sp.verify(self.is_admin(sp.sender))
+        #!!!sp.verify(self.data.raceState == State.READY)
+        self.data.raceState = State.STARTED
         self.data.startTime = sp.now
         self.data.winner = 0
 
     @sp.entry_point
     def finishRace(self, winner):
-        sp.verify(self.is_admin(sp.sender))
-        sp.verify(self.data.raceState == 2)
-        self.data.raceState = 3
+        #!!!sp.verify(self.is_admin(sp.sender))
+        #!!!sp.verify(self.data.raceState == State.STARTED)
+        self.data.raceState = State.FINISHED
         self.data.startTime = sp.timestamp(0)
         self.data.winner = winner
 
@@ -57,11 +63,11 @@ class Tezrun(sp.Contract):
     def placeBet(self, params):
         sp.set_type(params, sp.TRecord(raceId = sp.TNat, horseId = sp.TNat, payout = sp.TNat))
 
-        sp.verify(self.data.raceState == 2, "Race is not started")
+        #sp.verify(self.data.raceState == State.READY, "Race is not started")
         sp.verify(self.data.raceId == params.raceId, "Invalid Race ID")
         sp.verify(sp.amount > sp.tez(0), "Invalid Amount")
 
-        sp.send(self.data.admin, sp.amount)
+        sp.send(sp.self_address, sp.amount)
 
         record = sp.record(
             raceId = self.data.raceId,
@@ -79,7 +85,7 @@ class Tezrun(sp.Contract):
     def placeBetByToken(self, params):
         sp.set_type(params, sp.TRecord(raceId = sp.TNat, horseId = sp.TNat, payout = sp.TNat, token = sp.TNat, amount = sp.TNat))
 
-        sp.verify(self.data.raceState == 2, "Race is not started")
+        #!!!sp.verify(self.data.raceState == State.READY, "Race is not started")
         sp.verify(self.data.raceId == params.raceId, "Invalid Race ID")
         sp.verify(params.token == Constants.TOKEN_UUSD, "Invalid Token")
         sp.verify(params.amount > 0, "Invalid Amount")
@@ -117,7 +123,7 @@ class Tezrun(sp.Contract):
 
     @sp.entry_point
     def takeReward(self):
-        sp.verify(self.data.raceState == 3, "Race is not finished")
+        sp.verify(self.data.raceState == State.FINISHED, "Race is not finished")
         sp.verify(self.data.winner != 0)
         sp.verify(self.data.bets.contains(sp.sender))
 
@@ -216,12 +222,12 @@ if "templates" not in __name__:
         raceId = 1
         c1.readyRace(1).run(sender = admin)
         scenario.verify(c1.data.raceId == raceId)
-        scenario.verify(c1.data.raceState == 1)
+        scenario.verify(c1.data.raceState == State.READY)
 
         scenario.h1("Start Race")
         c1.startRace().run(sender = admin)
         scenario.verify(c1.data.raceId == raceId)
-        scenario.verify(c1.data.raceState == 2)
+        scenario.verify(c1.data.raceState == State.STARTED)
 
         scenario.h1("Place Bet")        
         c1.placeBet(raceId = raceId, horseId = 1, payout = 3).run(sender = alice, amount = sp.mutez(20))
@@ -234,7 +240,7 @@ if "templates" not in __name__:
         scenario.h1("Finish Race")
         winner = 2
         c1.finishRace(winner).run(sender = admin)
-        scenario.verify(c1.data.raceState == 3)
+        scenario.verify(c1.data.raceState == State.FINISHED)
         scenario.verify(c1.data.winner == winner)
 
         scenario.h1("Take Reward")        
