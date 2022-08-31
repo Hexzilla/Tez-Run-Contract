@@ -1,8 +1,8 @@
 import smartpy as sp
 
 class Constants:
-    ADMINISTRATOR = "tz1hmPbNNcaH91bkrYDeyAbUmYzjbPtJjPQR"
-    CONTRACT_UUSD = "KT1QEzbqE3pdb1G7TzV3P7gs1A8YtMvdNLWU"
+    ADMINISTRATOR = "tz1bxwduvRwBhq59FmThGKD5ceDFadr57JTq"
+    CONTRACT_UUSD = "KT1Xf83TTyDDxYxr1x2jKFjHXcCsD4RSnaE5"
     TOKEN_UUSD = 1
 
 class State:    
@@ -208,7 +208,7 @@ if "templates" not in __name__:
         scenario.h1("Tezrun")
         
         admin = sp.address(Constants.ADMINISTRATOR)
-        alice = sp.address("tz1NvdDA5jtTNmRZD94ZUWP7dBwARStrQcFM")
+        alice = sp.address("tz1YW2Ysiyb8CccVQwevYcS3k9qHNtWsWdJ2")
         bob   = sp.test_account("Robert")
 
         c1 = Tezrun(admin)

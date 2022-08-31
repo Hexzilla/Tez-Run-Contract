@@ -431,7 +431,7 @@ if "templates" not in __name__:
     sp.add_compilation_target(
         "uUSD",
         FA12(
-            admin   = sp.address("tz1hmPbNNcaH91bkrYDeyAbUmYzjbPtJjPQR"),
+            admin   = sp.address("tz1bxwduvRwBhq59FmThGKD5ceDFadr57JTq"),
             config  = FA12_config(
                 support_upgradable_metadata         = True,
                 use_token_metadata_offchain_view    = True
