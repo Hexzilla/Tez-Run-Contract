@@ -21,7 +21,7 @@ let main (param, storage : tezrun_param * tezrun_storage)
 
   | Race p ->
     let _ = fail_if_not_admin storage.admin in
-    let ops, s = race_manager (p, storage) in 
+    let ops, s = race_main (p, storage) in 
     (ops, s)
 
 

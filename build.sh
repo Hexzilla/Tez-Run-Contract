@@ -1,4 +1,5 @@
 cd ligo/src
+mkdir .build
 
 ligo compile contract tezrun.mligo --entry-point tezrun  > ./.build/tezrun.tz
 

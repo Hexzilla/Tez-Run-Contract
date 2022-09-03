@@ -28,7 +28,7 @@ let finish_race (winner, storage : int * race_storage) : race_storage =
   } in
   s
 
-let race_manager (param, storage : race_param * race_storage) 
+let race_main (param, storage : race_manager * race_storage) 
     : (operation list) * race_storage =
   match param with
   | Start_race -> 
