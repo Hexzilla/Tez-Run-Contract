@@ -3,7 +3,7 @@
 
 type tezrun_storage = {
   admin : simple_admin_storage;
-  race : race_manager;
+  race : race_storage;
 }
 
 type tezrun_param =
@@ -12,7 +12,7 @@ type tezrun_param =
 
 
 let main (param, storage : tezrun_param * tezrun_storage)
-    : (operation list) * multi_asset_storage =
+    : (operation list) * tezrun_storage =
   match param with
   | Admin p ->  
     let ops, admin = simple_admin (p, storage.admin) in
@@ -21,7 +21,8 @@ let main (param, storage : tezrun_param * tezrun_storage)
 
   | Race p ->
     let _ = fail_if_not_admin storage.admin in
-    let ops, s = race_main (p, storage) in 
+    let ops, race = race_main (p, storage.race) in 
+    let s = { storage with race = race; } in
     (ops, s)
 
 
@@ -31,7 +32,7 @@ This is a sample initial fa2_multi_asset storage.
 
 let store : tezrun_storage = {
   admin = {
-    admin = ("tz1YPSCGWXwBdTncK2aCctSZAXWvGsGwVJqU" : address);
+    admin = ("tz1bxwduvRwBhq59FmThGKD5ceDFadr57JTq" : address);
     pending_admin = (None : address option);
     paused = false;
   };
