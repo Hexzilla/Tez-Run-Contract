@@ -45,10 +45,10 @@ let store : tezrun_storage = {
     paused = false;
   };
   race = {
-    race_id = 0;
-    status = 0;
-    winner = 0;
-    ready_time = 0;
+    race_id = 0n;
+    status = 0n;
+    winner = 0n;
+    ready_time = 0n;
     start_time = Tezos.get_now ();
   };
   betting = {

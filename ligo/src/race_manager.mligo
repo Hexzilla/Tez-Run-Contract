@@ -2,40 +2,40 @@
 #define RACE_MANAGER
 
 type race_storage = {
-  race_id : int;
-  status : int;
-  winner : int;
-  ready_time: int;
+  race_id : nat;
+  status : nat;
+  winner : nat;
+  ready_time: nat;
   start_time : timestamp;
 }
 
 type race_param = 
-  | Ready_race of int
+  | Ready_race of nat
   | Start_race
-  | Finish_race of int
+  | Finish_race of nat
 
 
-let ready_race (ready_time, storage : int * race_storage) : race_storage =
-  let new_race_id = 1 + storage.race_id in
+let ready_race (ready_time, storage : nat * race_storage) : race_storage =
+  let new_race_id = 1n + storage.race_id in
   let s = { storage with
     race_id = new_race_id;
-    status = 1;
-    winner = 0;
+    status = 1n;
+    winner = 0n;
     ready_time = ready_time;
   } in
   s
 
 let start_race (storage : race_storage) : race_storage =
   let s = { storage with
-    status = 2;
-    winner = 0;
+    status = 2n;
+    winner = 0n;
     start_time = Tezos.get_now ();
   } in
   s
 
-let finish_race (winner, storage : int * race_storage) : race_storage = 
+let finish_race (winner, storage : nat * race_storage) : race_storage = 
   let s = { storage with
-    status = 3;
+    status = 3n;
     winner = winner;
   } in
   s

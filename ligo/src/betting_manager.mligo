@@ -10,7 +10,7 @@ type place_bet_param = {
 type betting = {
   race_id : int;
   horse_id : int;
-  amount : int;
+  amount : tez;
   payout : int;
 }
 
@@ -29,7 +29,7 @@ let place_bet (param, storage : place_bet_param * betting_storage) : betting_sto
     race_id = param.race_id;
     horse_id = param.horse_id;
     payout = param.payout;
-    amount = 1;
+    amount = 10000mutez;
   } in
   let updated_ledger : betting_ledger =
     Big_map.update (Tezos.get_sender()) (Some bet) storage.ledger in  
