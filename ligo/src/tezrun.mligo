@@ -40,6 +40,7 @@ let store : tezrun_storage = {
     race_id = 0;
     status = 0;
     winner = 0;
+    ready_time = 0;
     start_time = Tezos.get_now ();
   };
 }

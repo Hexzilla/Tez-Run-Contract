@@ -15,6 +15,7 @@ ligo compile storage tezrun.mligo --entry-point main '
     race_id = 0;
     status = 0;
     winner = 0;
+    ready_time = 0;
     start_time = Tezos.get_now ();
   };
 }
