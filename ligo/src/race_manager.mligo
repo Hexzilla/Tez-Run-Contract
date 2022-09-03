@@ -9,7 +9,7 @@ type race_storage = {
   start_time : timestamp;
 }
 
-type race_manager = 
+type race_param = 
   | Ready_race of int
   | Start_race
   | Finish_race of int
@@ -40,7 +40,7 @@ let finish_race (winner, storage : int * race_storage) : race_storage =
   } in
   s
 
-let race_main (param, storage : race_manager * race_storage) 
+let race_main (param, storage : race_param * race_storage) 
     : (operation list) * race_storage =
   match param with
 

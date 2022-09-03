@@ -1,14 +1,17 @@
 #include "simple_admin.mligo"
 #include "race_manager.mligo"
+#include "betting_manager.mligo"
 
 type tezrun_storage = {
   admin : simple_admin_storage;
   race : race_storage;
+  betting: betting_storage;
 }
 
 type tezrun_param =
   | Admin of simple_admin
-  | Race of race_manager
+  | Race of race_param
+  | Betting of betting_param
 
 
 let main (param, storage : tezrun_param * tezrun_storage)
@@ -23,6 +26,11 @@ let main (param, storage : tezrun_param * tezrun_storage)
     let _ = fail_if_not_admin storage.admin in
     let ops, race = race_main (p, storage.race) in 
     let s = { storage with race = race; } in
+    (ops, s)
+
+  | Betting p ->
+    let ops, b = betting_main (p, storage.betting) in 
+    let s = { storage with betting = b; } in
     (ops, s)
 
 
@@ -42,5 +50,8 @@ let store : tezrun_storage = {
     winner = 0;
     ready_time = 0;
     start_time = Tezos.get_now ();
+  };
+  betting = {
+    ledger = (Big_map.empty : betting_ledger);
   };
 }
