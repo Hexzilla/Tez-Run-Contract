@@ -43,5 +43,6 @@ let store : tezrun_storage = {
     ready_time = 0n;
     start_time = Tezos.get_now ();
     bettings = (Big_map.empty : betting_ledger);
+    rewards = (Big_map.empty : reward_ledger);
   };
 }

@@ -16,6 +16,8 @@ type betting = {
 
 type betting_ledger = (address, betting) big_map
 
+type reward_ledger = (address, tez) big_map
+
 type race_storage = {
   race_id : nat;
   status : nat;
@@ -23,6 +25,7 @@ type race_storage = {
   ready_time: nat;
   start_time : timestamp;
   bettings : betting_ledger;
+  rewards : reward_ledger;
 }
 
 type race_param = 
