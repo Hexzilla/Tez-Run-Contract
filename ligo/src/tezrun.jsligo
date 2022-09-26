@@ -5,17 +5,19 @@
 type tezrun_storage = {
   admin : Admin.simple_admin_storage,
   race : Race.race_storage,
+  betting: Betting.betting_storage,
 };
 
 type tezrun_param =
     ["Admin", Admin.simple_admin]
-  | ["Race", Race.race_param];
+  | ["Race", Race.race_param]
+  | ["Betting", Betting.betting_param];
 
 
-export type return_ = [list<operation>, tezrun_storage];
+export type return_type = [list<operation>, tezrun_storage];
 
 
-export const main = ([param, storage] : [tezrun_param, tezrun_storage]) : return_=> {
+export const main = ([param, storage] : [tezrun_param, tezrun_storage]) : return_type=> {
   match(param, {
     Admin: (p: Admin.simple_admin) => {
       const [ops, admin] = Admin.main(p, storage.admin);
@@ -27,16 +29,15 @@ export const main = ([param, storage] : [tezrun_param, tezrun_storage]) : return
     },
     Race: (p: Race.race_param) => {
       Admin.fail_if_not_admin(storage.admin);
-      const [ops, race, betting] = Race.main(p, storage.race);
+      const [ops, race] = Race.main(p, storage.race);
       const s = {
         ...storage,
         race: race,
-        betting: betting,
       };
       return [ops, s];
     },
     Betting: (p: Betting.betting_param) => {
-      const [ops, race] = Betting.main(p, storage.race);
+      const [ops, betting] = Betting.main(p, storage.betting);
       const s = {
         ...storage,
         betting: betting

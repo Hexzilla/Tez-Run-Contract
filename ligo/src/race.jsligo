@@ -1,4 +1,4 @@
-type race_storage = {
+export type race_storage = {
   race_id : nat,
   status : nat,
   winner : nat,
@@ -6,13 +6,12 @@ type race_storage = {
   start_time : timestamp,
 };
 
-export type return_type = [list<operation>, race_storage];
+export type return_type = [list<operation>, race_storage]
 
 export type race_param = 
     ["Ready_race", nat]
   | ["Start_race"]
   | ["Finish_race", nat];
-
 
 
 const ready_race = ([ready_time, storage] : [nat, race_storage]) : race_storage => {
@@ -41,11 +40,11 @@ const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => 
   //    Big_map.add (bet.address) (bet.amount * bet.payout) storage.rewards
   //  in
   //let rewards : reward_ledger = List.iter update_rewards storage.bettings in
-  let s = {
+  return {
     ...storage,
     status: 3 as nat,
     winner: winner,
-    bettings: [],
+    //bettings: [],
     //rewards: rewards;
   };
 };

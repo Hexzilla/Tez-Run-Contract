@@ -13,35 +13,41 @@ export type simple_admin_storage = {
 export type return_type = [list<operation>, simple_admin_storage];
 
 const set_admin = ([new_admin, s] : [address, simple_admin_storage]) : simple_admin_storage => {
-    s.pending_admin = new_admin;
-    return s;
+  return {
+    ...s,
+    pending_admin: Some(new_admin)
+  };
 };
 
 
 const confirm_new_admin = (s : simple_admin_storage) : simple_admin_storage => {
-    return match(s.pending_admin, {
-        None: () => failwith("NO_PENDING_ADMIN"),
-        Pending: (pending: bool) => {
-            if (Tezos.get_sender() == pending) {
-                s.pending_admin = None;
-                s.admin = Tezos.get_sender();
-                return s;
-            } else {
-                failwith("NOT_A_PENDING_ADMIN");
-            }
-        },
-    });
+  return match(s.pending_admin, {
+    None: () => failwith("NO_PENDING_ADMIN"),
+    Some: (pending: address) => {
+      if (Tezos.get_sender() == pending) {
+        return {
+          ...s,
+          pending_admin: None() as option<address>,
+          admin: Tezos.get_sender(),
+        };
+      } else {
+        return failwith("NOT_A_PENDING_ADMIN");
+      }
+    },
+  });
 };
 
 const pause = ([paused, s]: [bool, simple_admin_storage]) : simple_admin_storage => {
-  s.paused = paused;
-  return s;
+  return {
+    ...s,
+    paused: paused,
+  };
 };
 
 
 const fail_if_not_admin = (a : simple_admin_storage) : unit => {
   if (Tezos.get_sender() != a.admin) {
-    failwith("NOT_AN_ADMIN");
+    return failwith("NOT_AN_ADMIN");
   } else {
     return unit;
   };
@@ -49,7 +55,7 @@ const fail_if_not_admin = (a : simple_admin_storage) : unit => {
 
 const fail_if_paused = (a : simple_admin_storage) : unit => {
   if (a.paused) {
-    failwith("PAUSED");
+    return failwith("PAUSED");
   } else {
     return unit;
   };
@@ -59,7 +65,7 @@ export const main = ([param, storage] : [simple_admin, simple_admin_storage]) : 
   match(param, {
     Set_admin: (new_admin: address) => {
       fail_if_not_admin(storage);
-      const s = set_admin(new_admin, stroage);
+      const s = set_admin(new_admin, storage);
       return [(list([]) as list<operation>), s];
     },
     Confirm_admin: () => {
@@ -67,7 +73,7 @@ export const main = ([param, storage] : [simple_admin, simple_admin_storage]) : 
       return [(list([]) as list<operation>), s];
     },
     Pause: (paused: bool) => {
-      fail_if_not_admin(stroage);
+      fail_if_not_admin(storage);
       const s = pause(paused, storage);
       return [(list([]) as list<operation>), s];
     }
