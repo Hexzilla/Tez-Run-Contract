@@ -2,19 +2,20 @@
 #define RACE_MANAGER
 
 type place_bet_param = {
-  race_id : int;
-  horse_id : int;
+  race_id : nat;
+  horse_id : nat;
   payout : int;
 }
 
 type betting = {
-  race_id : int;
-  horse_id : int;
+  address : address;
+  race_id : nat;
+  horse_id : nat;
   amount : tez;
-  payout : int;
+  payout : nat;
 }
 
-type betting_ledger = (address, betting) big_map
+type betting_list = betting list
 
 type reward_ledger = (address, tez) big_map
 
@@ -24,7 +25,7 @@ type race_storage = {
   winner : nat;
   ready_time: nat;
   start_time : timestamp;
-  bettings : betting_ledger;
+  bettings : betting_list;
   rewards : reward_ledger;
 }
 
@@ -56,22 +57,29 @@ let start_race (storage : race_storage) : race_storage =
 
 
 let finish_race (winner, storage : nat * race_storage) : race_storage = 
+  let update_rewards : unit = fun (bet : betting) -> 
+    if bet.horse_id = winner then 
+      Big_map.add (bet.address) (bet.amount * bet.payout) storage.rewards
+    in
+  let rewards : reward_ledger = List.iter update_rewards storage.bettings in
   let s = { storage with
     status = 3n;
     winner = winner;
+    bettings = [];
+    rewards = rewards;
   } in
   s
 
 
 let place_bet (param, storage : place_bet_param * race_storage) : race_storage =
   let bet: betting = {
+    address = Tezos.get_sender();
     race_id = param.race_id;
     horse_id = param.horse_id;
     payout = param.payout;
     amount = 10000mutez;
   } in
-  let updated_bettings : betting_ledger =
-    Big_map.update (Tezos.get_sender()) (Some bet) storage.bettings in  
+  let updated_bettings : betting_list = bet :: storage.bettings in
   let s = { storage with bettings = updated_bettings; } in
   s
 

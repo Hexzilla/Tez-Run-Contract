@@ -17,7 +17,7 @@ ligo compile storage tezrun.mligo --entry-point main '
     winner = 0n;
     ready_time = 0n;
     start_time = Tezos.get_now ();
-    bettings = (Big_map.empty : betting_ledger);
+    bettings = ([] : betting_list);
     rewards = (Big_map.empty : reward_ledger);
   };
 }
