@@ -1,0 +1,47 @@
+#import "admin.jsligo" "Admin"
+#import "race.jsligo" "Race"
+#import "betting.jsligo" "Betting"
+
+type tezrun_storage = {
+  admin : Admin.simple_admin_storage,
+  race : Race.race_storage,
+};
+
+type tezrun_param =
+    ["Admin", Admin.simple_admin]
+  | ["Race", Race.race_param];
+
+
+export type return_ = [list<operation>, tezrun_storage];
+
+
+export const main = ([param, storage] : [tezrun_param, tezrun_storage]) : return_=> {
+  match(param, {
+    Admin: (p: Admin.simple_admin) => {
+      const [ops, admin] = Admin.main(p, storage.admin);
+      const s = {
+        ...storage,
+        admin: admin
+      };
+      return [ops, s];
+    },
+    Race: (p: Race.race_param) => {
+      Admin.fail_if_not_admin(storage.admin);
+      const [ops, race, betting] = Race.main(p, storage.race);
+      const s = {
+        ...storage,
+        race: race,
+        betting: betting,
+      };
+      return [ops, s];
+    },
+    Betting: (p: Betting.betting_param) => {
+      const [ops, race] = Betting.main(p, storage.race);
+      const s = {
+        ...storage,
+        betting: betting
+      };
+      return [ops, s];
+    }
+  });
+};

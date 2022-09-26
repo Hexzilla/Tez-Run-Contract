@@ -1,0 +1,75 @@
+export type simple_admin =
+    ["Set_admin", address]
+  | ["Confirm_admin", unit]
+  | ["Pause", bool];
+
+
+export type simple_admin_storage = {
+    admin : address,
+    pending_admin : option<address>,
+    paused : bool
+};
+
+export type return_type = [list<operation>, simple_admin_storage];
+
+const set_admin = ([new_admin, s] : [address, simple_admin_storage]) : simple_admin_storage => {
+    s.pending_admin = new_admin;
+    return s;
+};
+
+
+const confirm_new_admin = (s : simple_admin_storage) : simple_admin_storage => {
+    return match(s.pending_admin, {
+        None: () => failwith("NO_PENDING_ADMIN"),
+        Pending: (pending: bool) => {
+            if (Tezos.get_sender() == pending) {
+                s.pending_admin = None;
+                s.admin = Tezos.get_sender();
+                return s;
+            } else {
+                failwith("NOT_A_PENDING_ADMIN");
+            }
+        },
+    });
+};
+
+const pause = ([paused, s]: [bool, simple_admin_storage]) : simple_admin_storage => {
+  s.paused = paused;
+  return s;
+};
+
+
+const fail_if_not_admin = (a : simple_admin_storage) : unit => {
+  if (Tezos.get_sender() != a.admin) {
+    failwith("NOT_AN_ADMIN");
+  } else {
+    return unit;
+  };
+};
+
+const fail_if_paused = (a : simple_admin_storage) : unit => {
+  if (a.paused) {
+    failwith("PAUSED");
+  } else {
+    return unit;
+  };
+};
+
+export const main = ([param, storage] : [simple_admin, simple_admin_storage]) : return_type => {
+  match(param, {
+    Set_admin: (new_admin: address) => {
+      fail_if_not_admin(storage);
+      const s = set_admin(new_admin, stroage);
+      return [(list([]) as list<operation>), s];
+    },
+    Confirm_admin: () => {
+      const s = confirm_new_admin(storage);
+      return [(list([]) as list<operation>), s];
+    },
+    Pause: (paused: bool) => {
+      fail_if_not_admin(stroage);
+      const s = pause(paused, storage);
+      return [(list([]) as list<operation>), s];
+    }
+  });
+};

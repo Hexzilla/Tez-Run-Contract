@@ -1,0 +1,68 @@
+type race_storage = {
+  race_id : nat,
+  status : nat,
+  winner : nat,
+  ready_time: nat,
+  start_time : timestamp,
+};
+
+export type return_type = [list<operation>, race_storage];
+
+export type race_param = 
+    ["Ready_race", nat]
+  | ["Start_race"]
+  | ["Finish_race", nat];
+
+
+
+const ready_race = ([ready_time, storage] : [nat, race_storage]) : race_storage => {
+  const new_race_id = (1 as nat) + storage.race_id;
+  return {
+    ...storage,
+    race_id: new_race_id,
+    status: 1 as nat,
+    winner: 0 as nat,
+    ready_time: ready_time,
+  };
+};
+
+const start_race = (storage : race_storage) : race_storage => {
+  return {
+    ...storage,
+    status: 2 as nat,
+    winner: 0 as nat,
+    start_time: Tezos.get_now(),
+  };
+};
+
+const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => {
+  //let update_rewards : unit = fun (bet : betting) -> 
+  //  if bet.horse_id = winner then 
+  //    Big_map.add (bet.address) (bet.amount * bet.payout) storage.rewards
+  //  in
+  //let rewards : reward_ledger = List.iter update_rewards storage.bettings in
+  let s = {
+    ...storage,
+    status: 3 as nat,
+    winner: winner,
+    bettings: [],
+    //rewards: rewards;
+  };
+};
+
+export const main = ([param, storage] : [race_param, race_storage]) : return_type => {
+  match(param, {
+    Ready_race: (ready_time: nat) => {
+      const s = ready_race(ready_time, storage);
+      return [(list([]) as list<operation>), s];
+    },
+    Start_race: () => {
+      const s = start_race(storage);
+      return [(list([]) as list<operation>), s];
+    },
+    Finish_race: (winner: nat) => {
+      const s = finish_race(winner, storage);
+      return [(list([]) as list<operation>), s];
+    }
+  })
+};
