@@ -1,12 +1,8 @@
-export type race_storage = {
-  race_id : nat,
-  status : nat,
-  winner : nat,
-  ready_time: nat,
-  start_time : timestamp,
-};
+#import "types.jsligo" "Types"
 
-export type return_type = [list<operation>, race_storage]
+type race_storage = Types.race_storage;
+
+type return_type = [list<operation>, race_storage]
 
 export type race_param = 
     ["Ready_race", nat]
@@ -52,16 +48,16 @@ const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => 
 export const main = ([param, storage] : [race_param, race_storage]) : return_type => {
   match(param, {
     Ready_race: (ready_time: nat) => {
-      const s = ready_race(ready_time, storage);
-      return [(list([]) as list<operation>), s];
+      const new_s = ready_race(ready_time, storage);
+      return [(list([]) as list<operation>), new_s];
     },
     Start_race: () => {
-      const s = start_race(storage);
-      return [(list([]) as list<operation>), s];
+      const new_s = start_race(storage);
+      return [(list([]) as list<operation>), new_s];
     },
     Finish_race: (winner: nat) => {
-      const s = finish_race(winner, storage);
-      return [(list([]) as list<operation>), s];
+      const new_s = finish_race(winner, storage);
+      return [(list([]) as list<operation>), new_s];
     }
   })
 };

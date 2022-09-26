@@ -1,0 +1,26 @@
+export type admin_storage = {
+    admin : address,
+    pending_admin : option<address>,
+    paused : bool
+};
+
+export type bet = {
+  address : address,
+  race_id : nat,
+  horse_id : nat,
+  amount : tez,
+  payout : nat,
+};
+
+export type bet_list = list<bet>; 
+export type reward_ledger = big_map<address, tez>;
+
+export type race_storage = {
+  race_id : nat,
+  status : nat,
+  winner : nat,
+  ready_time: nat,
+  start_time : timestamp,
+  bets : bet_list,
+  rewards : reward_ledger,
+};

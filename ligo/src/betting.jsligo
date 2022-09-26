@@ -1,34 +1,24 @@
+#import "types.jsligo" "Types"
+
+type bet = Types.bet;
+type bet_list = Types.bet_list; 
+type reward_ledger = Types.reward_ledger;
+type race_storage = Types.race_storage;
+
+type return_type = [list<operation>, race_storage];
+
 type place_bet_param = {
   race_id : nat,
   horse_id : nat,
   payout : nat,
 };
 
-export type bet = {
-  address : address,
-  race_id : nat,
-  horse_id : nat,
-  amount : tez,
-  payout : nat,
-};
-
-export type bet_list = list<bet>; 
-
-export type reward_ledger = big_map<address, tez>;
-
-export type betting_storage = {
-  bets : bet_list,
-  rewards : reward_ledger,
-};
-
-export type return_type = [list<operation>, betting_storage];
-
 export type betting_param = 
     ["Place_bet", place_bet_param]
   | ["Take_reward"];
 
 
-const place_bet = ([param, storage] : [place_bet_param, betting_storage]) : betting_storage => {
+const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_storage => {
   const betting: bet = {
     address: Tezos.get_sender(),
     race_id: param.race_id,
@@ -36,14 +26,14 @@ const place_bet = ([param, storage] : [place_bet_param, betting_storage]) : bett
     payout: param.payout,
     amount: 10000 as mutez,
   };
-  const updated_bets: bet_list = list([betting, ...storage.bets]);
+  const new_bets: bet_list = list([betting, ...storage.bets]);
   return {
     ...storage,
-    bets: updated_bets,
+    bets: new_bets,
   };
 };
 
-export const main = ([param, storage] : [betting_param, betting_storage]) : return_type => {
+export const main = ([param, storage] : [betting_param, race_storage]) : return_type => {
   match(param, {
     Place_bet: (p: place_bet_param) => {
       const s = place_bet(p, storage);

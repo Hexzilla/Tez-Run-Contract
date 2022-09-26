@@ -1,11 +1,11 @@
+#import "types.jsligo" "Types"
 #import "admin.jsligo" "Admin"
 #import "race.jsligo" "Race"
 #import "betting.jsligo" "Betting"
 
 type tezrun_storage = {
-  admin : Admin.simple_admin_storage,
-  race : Race.race_storage,
-  bettings: Betting.betting_storage,
+  admin : Types.admin_storage,
+  race : Types.race_storage,
 };
 
 type tezrun_param =
@@ -37,10 +37,10 @@ export const main = ([param, storage] : [tezrun_param, tezrun_storage]) : return
       return [ops, s];
     },
     Betting: (p: Betting.betting_param) => {
-      const [ops, bettings] = Betting.main(p, storage.bettings);
+      const [ops, race] = Betting.main(p, storage.race);
       const s = {
         ...storage,
-        bettings: bettings
+        race: race,
       };
       return [ops, s];
     }

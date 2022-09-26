@@ -16,11 +16,9 @@ ligo compile storage tezrun.jsligo --entry-point main '
     status: 0 as nat,
     winner: 0 as nat,
     ready_time: 0 as nat,
-    start_time: Tezos.get_now()
-  },
-  bettings: {
-    bets: list([]) as Betting.bet_list,
-    rewards: Big_map.empty as Betting.reward_ledger
+    start_time: Tezos.get_now(),
+    bets: list([]) as Types.bet_list,
+    rewards: Big_map.empty as Types.reward_ledger
   }
 }
 ' > ./.build/tezrun_storage.tz
