@@ -4,7 +4,7 @@ type place_bet_param = {
   payout : nat,
 };
 
-type betting = {
+export type bet = {
   address : address,
   race_id : nat,
   horse_id : nat,
@@ -12,12 +12,12 @@ type betting = {
   payout : nat,
 };
 
-export type betting_list = list<betting>; 
+export type bet_list = list<bet>; 
 
 export type reward_ledger = big_map<address, tez>;
 
 export type betting_storage = {
-  bettings : betting_list,
+  bets : bet_list,
   rewards : reward_ledger,
 };
 
@@ -29,17 +29,17 @@ export type betting_param =
 
 
 const place_bet = ([param, storage] : [place_bet_param, betting_storage]) : betting_storage => {
-  let bet: betting = {
+  const betting: bet = {
     address: Tezos.get_sender(),
     race_id: param.race_id,
     horse_id: param.horse_id,
     payout: param.payout,
     amount: 10000 as mutez,
   };
-  let updated_bettings : betting_list = list([bet, ...storage.bettings]);
+  const updated_bets: bet_list = list([betting, ...storage.bets]);
   return {
     ...storage,
-    bettings: updated_bettings,
+    bets: updated_bets,
   };
 };
 

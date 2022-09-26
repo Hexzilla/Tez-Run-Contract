@@ -19,7 +19,6 @@ const set_admin = ([new_admin, s] : [address, simple_admin_storage]) : simple_ad
   };
 };
 
-
 const confirm_new_admin = (s : simple_admin_storage) : simple_admin_storage => {
   return match(s.pending_admin, {
     None: () => failwith("NO_PENDING_ADMIN"),
@@ -43,7 +42,6 @@ const pause = ([paused, s]: [bool, simple_admin_storage]) : simple_admin_storage
     paused: paused,
   };
 };
-
 
 const fail_if_not_admin = (a : simple_admin_storage) : unit => {
   if (Tezos.get_sender() != a.admin) {

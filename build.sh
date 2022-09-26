@@ -12,14 +12,16 @@ ligo compile storage tezrun.jsligo --entry-point main '
     paused: false,
   },
   race: {
-    race_id: 0 as nat;
-    status: 0 as nat;
-    winner: 0 as nat;
-    ready_time: 0 as nat;
-    start_time: Tezos.get_now();
-    bettings: ([] as Betting.betting_list);
-    rewards: (Big_map.empty as Betting.reward_ledger);
-  };
+    race_id: 0 as nat,
+    status: 0 as nat,
+    winner: 0 as nat,
+    ready_time: 0 as nat,
+    start_time: Tezos.get_now()
+  },
+  bettings: {
+    bets: list([]) as Betting.bet_list,
+    rewards: Big_map.empty as Betting.reward_ledger
+  }
 }
 ' > ./.build/tezrun_storage.tz
 
