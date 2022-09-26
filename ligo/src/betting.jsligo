@@ -24,7 +24,7 @@ const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_st
     race_id: param.race_id,
     horse_id: param.horse_id,
     payout: param.payout,
-    amount: 10000 as mutez,
+    amount: Tezos.get_amount(),
   };
   const new_bets: bet_list = list([betting, ...storage.bets]);
   return {
@@ -33,14 +33,34 @@ const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_st
   };
 };
 
+const take_reward = (storage: race_storage) : race_storage => {
+  let address = Tezos.get_sender();
+  let rewards = storage.rewards;
+  let has_balance = Big_map.mem(address, rewards);
+  if (has_balance) {
+    const balance_opt: option<tez> = Big_map.find_opt(address, rewards);
+    const balance = Option.unopt(balance_opt);
+
+    if (balance > (0 as tez)) {
+      rewards = Big_map.update(address, Some(0 as tez), rewards);
+    }
+  }
+
+  return {
+    ...storage,
+    rewards: rewards,
+  }
+}
+
 export const main = ([param, storage] : [betting_param, race_storage]) : return_type => {
   match(param, {
     Place_bet: (p: place_bet_param) => {
-      const s = place_bet(p, storage);
-      return [(list([]) as list<operation>), s];
+      const new_s = place_bet(p, storage);
+      return [(list([]) as list<operation>), new_s];
     },
     Take_reward: () => {
-      return [(list([]) as list<operation>), storage];
+      const new_s = take_reward(storage);
+      return [(list([]) as list<operation>), new_s];
     }
   })
 };
