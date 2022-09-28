@@ -1,6 +1,6 @@
 cd ligo/src/.build
 
-tezos-client originate contract Tezrun transferring 0.0001 from tz1bxwduvRwBhq59FmThGKD5ceDFadr57JTq \
+tezos-client originate contract Tezrun transferring 10.0 from tz1bxwduvRwBhq59FmThGKD5ceDFadr57JTq \
 running tezrun.tz \
 --force \
 --init '
