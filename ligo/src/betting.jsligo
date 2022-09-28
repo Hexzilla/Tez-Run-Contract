@@ -15,7 +15,7 @@ type place_bet_param = {
 
 export type betting_param = 
     ["Place_bet", place_bet_param]
-  | ["Take_reward"];
+  | ["Take_rewards"];
 
 
 const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_storage => {
@@ -33,16 +33,28 @@ const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_st
   };
 };
 
-const take_reward = (storage: race_storage) : race_storage => {
-  let address = Tezos.get_sender();
+const take_rewards = (storage: race_storage) : race_storage => {
+  let sender = Tezos.get_sender();
   let rewards = storage.rewards;
-  let has_balance = Big_map.mem(address, rewards);
+  let has_balance = Big_map.mem(sender, rewards);
   if (has_balance) {
-    const balance_opt: option<tez> = Big_map.find_opt(address, rewards);
-    const balance = Option.unopt(balance_opt);
+    const amount_opt: option<tez> = Big_map.find_opt(sender, rewards);
+    const amount = Option.unopt(amount_opt);
 
-    if (balance > (0 as tez)) {
-      rewards = Big_map.update(address, Some(0 as tez), rewards);
+    // Reset reward
+    rewards = Big_map.update(sender, Some(0 as tez), rewards);
+
+    if (amount > (0 as tez)) {
+      /*let receiver: contract<unit> =
+        match ((Tezos.get_contract_opt(sender) as option<contract<unit>>), {
+          Some: (contract) => contract,
+          None: () => failwith("Contract not found.")
+        });
+        
+      Tezos.transaction(unit, (amount as tez), receiver);*/
+
+      let receiver = Tezos.get_contract_with_error(sender, "Contract not found.") as contract<unit>;
+      let _ = Tezos.transaction(unit, amount, receiver);
     }
   }
 
@@ -58,8 +70,8 @@ export const main = ([param, storage] : [betting_param, race_storage]) : return_
       const new_s = place_bet(p, storage);
       return [(list([]) as list<operation>), new_s];
     },
-    Take_reward: () => {
-      const new_s = take_reward(storage);
+    Take_rewards: () => {
+      const new_s = take_rewards(storage);
       return [(list([]) as list<operation>), new_s];
     }
   })
