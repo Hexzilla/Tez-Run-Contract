@@ -36,10 +36,15 @@ const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_st
 const take_rewards = (storage: race_storage) : race_storage => {
   let sender = Tezos.get_sender();
   let rewards = storage.rewards;
-  let has_balance = Big_map.mem(sender, rewards);
-  if (has_balance) {
+  let has_rewards = Big_map.mem(sender, rewards);
+  if (has_rewards) {
     const amount_opt: option<tez> = Big_map.find_opt(sender, rewards);
     const amount = Option.unopt(amount_opt);
+
+    const balance = Tezos.get_balance();
+    if (amount > balance) {
+      failwith("NO_ENOUGH_BALANCE");
+    }
 
     // Reset reward
     rewards = Big_map.update(sender, Some(0 as tez), rewards);
