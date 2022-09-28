@@ -31,17 +31,17 @@ const start_race = (storage : race_storage) : race_storage => {
 };
 
 const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => {
-  let rewards_map = storage.rewards;
+  let new_rewards = storage.rewards;
   for (const bet of storage.bets) {
     if (bet.horse_id == winner) {
       const reward = bet.amount * bet.payout;
-      const has_balance = Big_map.mem(bet.address, rewards_map);
+      const has_balance = Big_map.mem(bet.address, new_rewards);
       if (has_balance) {
-        const balance_opt: option<tez> = Big_map.find_opt(bet.address, rewards_map);
+        const balance_opt: option<tez> = Big_map.find_opt(bet.address, new_rewards);
         const balance = Option.unopt(balance_opt);
-        rewards_map = Big_map.update(bet.address, Some(balance + reward), rewards_map);
+        new_rewards = Big_map.update(bet.address, Some(balance + reward), new_rewards);
       } else {
-        rewards_map = Big_map.add(bet.address, reward, rewards_map);
+        new_rewards = Big_map.add(bet.address, reward, new_rewards);
       }
     }
   };
@@ -50,7 +50,7 @@ const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => 
     status: 3 as nat,
     winner: winner,
     bets: list([]) as Types.bet_list,
-    rewards: rewards_map
+    rewards: new_rewards
   };
 };
 
