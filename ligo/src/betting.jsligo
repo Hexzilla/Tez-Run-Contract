@@ -34,38 +34,39 @@ const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_st
 };
 
 const take_rewards = (storage: race_storage) : race_storage => {
-  let sender = Tezos.get_sender();
-  let rewards = storage.rewards;
-  let has_rewards = Big_map.mem(sender, rewards);
-  if (has_rewards) {
+  const sender = Tezos.get_sender();
+  const rewards = storage.rewards;
+
+  const has_rewards = Big_map.mem(sender, rewards);
+  if (!has_rewards) {
+    return failwith("NO_REWARDS");
+  } else {
     const amount_opt: option<tez> = Big_map.find_opt(sender, rewards);
     const amount = Option.unopt(amount_opt);
 
     const balance = Tezos.get_balance();
     if (amount > balance) {
-      failwith("NO_ENOUGH_BALANCE");
+      return failwith("NO_ENOUGH_BALANCE");
+    } else {
+      // Reset reward for sender
+      const new_rewards = Big_map.update(sender, Some(0 as tez), rewards);
+
+      if (amount > (0 as tez)) {
+        /*let receiver: contract<unit> =
+          match ((Tezos.get_contract_opt(sender) as option<contract<unit>>), {
+            Some: (contract) => contract,
+            None: () => failwith("Contract not found.")
+          });
+        let _ = Tezos.transaction(unit, (amount as tez), receiver);*/
+
+        let receiver = Tezos.get_contract_with_error(sender, "Contract not found.") as contract<unit>;
+        let _ = Tezos.transaction(unit, amount, receiver);
+      }
+      return {
+        ...storage,
+        rewards: new_rewards,
+      }
     }
-
-    // Reset reward
-    rewards = Big_map.update(sender, Some(0 as tez), rewards);
-
-    if (amount > (0 as tez)) {
-      /*let receiver: contract<unit> =
-        match ((Tezos.get_contract_opt(sender) as option<contract<unit>>), {
-          Some: (contract) => contract,
-          None: () => failwith("Contract not found.")
-        });
-        
-      Tezos.transaction(unit, (amount as tez), receiver);*/
-
-      let receiver = Tezos.get_contract_with_error(sender, "Contract not found.") as contract<unit>;
-      let _ = Tezos.transaction(unit, amount, receiver);
-    }
-  }
-
-  return {
-    ...storage,
-    rewards: rewards,
   }
 }
 
