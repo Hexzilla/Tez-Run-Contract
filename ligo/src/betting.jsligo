@@ -19,18 +19,22 @@ export type betting_param =
 
 
 const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_storage => {
-  const betting: bet = {
-    address: Tezos.get_sender(),
-    race_id: param.race_id,
-    horse_id: param.horse_id,
-    payout: param.payout,
-    amount: Tezos.get_amount(),
-  };
-  const new_bets: bet_list = list([betting, ...storage.bets]);
-  return {
-    ...storage,
-    bets: new_bets,
-  };
+  if (storage.status != 1) {
+    return failwith("NOT_ABLE_BET");
+  } else {
+    const betting: bet = {
+      address: Tezos.get_sender(),
+      race_id: param.race_id,
+      horse_id: param.horse_id,
+      payout: param.payout,
+      amount: Tezos.get_amount(),
+    };
+    const new_bets: bet_list = list([betting, ...storage.bets]);
+    return {
+      ...storage,
+      bets: new_bets,
+    };
+  }
 };
 
 const take_rewards = (storage: race_storage) : return_type => {
@@ -66,5 +70,5 @@ export const main = ([param, storage] : [betting_param, race_storage]) : return_
       return [list([]), new_s];
     },
     Take_rewards: () => take_rewards(storage),
-  })
+  });
 };

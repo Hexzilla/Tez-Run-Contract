@@ -14,44 +14,48 @@ const ready_race = ([ready_time, storage] : [nat, race_storage]) : race_storage 
   const new_race_id = (1 as nat) + storage.race_id;
   return {
     ...storage,
-    race_id: new_race_id,
     status: 1 as nat,
-    winner: 0 as nat,
-    ready_time: ready_time,
+    start_time: Tezos.get_now() + ready_time,
   };
 };
 
 const start_race = (storage : race_storage) : race_storage => {
+  const new_race_id = (1 as nat) + storage.race_id;
   return {
     ...storage,
+    race_id: new_race_id,
     status: 2 as nat,
-    winner: 0 as nat,
     start_time: Tezos.get_now(),
+    winner: 0 as nat,
+    bets: list([]) as Types.bet_list,
   };
 };
 
 const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => {
-  let new_rewards = storage.rewards;
-  for (const bet of storage.bets) {
-    if (bet.horse_id == winner) {
-      const reward = bet.amount * bet.payout;
-      const has_balance = Big_map.mem(bet.address, new_rewards);
-      if (has_balance) {
-        const balance_opt: option<tez> = Big_map.find_opt(bet.address, new_rewards);
-        const balance = Option.unopt(balance_opt);
-        new_rewards = Big_map.update(bet.address, Some(balance + reward), new_rewards);
-      } else {
-        new_rewards = Big_map.add(bet.address, reward, new_rewards);
+  if (storage.status != 2) {
+    return failwith("RACE_NOT_STARTED");
+  } else {
+    let new_rewards = storage.rewards;
+    for (const bet of storage.bets) {
+      if (bet.horse_id == winner) {
+        const reward = bet.amount * bet.payout;
+        const has_balance = Big_map.mem(bet.address, new_rewards);
+        if (has_balance) {
+          const balance_opt: option<tez> = Big_map.find_opt(bet.address, new_rewards);
+          const balance = Option.unopt(balance_opt);
+          new_rewards = Big_map.update(bet.address, Some(balance + reward), new_rewards);
+        } else {
+          new_rewards = Big_map.add(bet.address, reward, new_rewards);
+        }
       }
-    }
-  };
-  return {
-    ...storage,
-    status: 3 as nat,
-    winner: winner,
-    bets: list([]) as Types.bet_list,
-    rewards: new_rewards
-  };
+    };
+    return {
+      ...storage,
+      status: 1 as nat,
+      winner: winner,
+      rewards: new_rewards,
+    };
+  }
 };
 
 export const main = ([param, storage] : [race_param, race_storage]) : return_type => {
