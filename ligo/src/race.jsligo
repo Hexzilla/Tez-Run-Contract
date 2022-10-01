@@ -5,13 +5,12 @@ type race_storage = Types.race_storage;
 type return_type = [list<operation>, race_storage]
 
 export type race_param = 
-    ["Ready_race", nat]
+    ["Ready_race", int]
   | ["Start_race"]
   | ["Finish_race", nat];
 
 
-const ready_race = ([ready_time, storage] : [nat, race_storage]) : race_storage => {
-  const new_race_id = (1 as nat) + storage.race_id;
+const ready_race = ([ready_time, storage] : [int, race_storage]) : race_storage => {
   return {
     ...storage,
     status: 1 as nat,
@@ -32,7 +31,7 @@ const start_race = (storage : race_storage) : race_storage => {
 };
 
 const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => {
-  if (storage.status != 2) {
+  if (storage.status != (2 as nat)) {
     return failwith("RACE_NOT_STARTED");
   } else {
     let new_rewards = storage.rewards;
@@ -60,7 +59,7 @@ const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => 
 
 export const main = ([param, storage] : [race_param, race_storage]) : return_type => {
   match(param, {
-    Ready_race: (ready_time: nat) => {
+    Ready_race: (ready_time: int) => {
       const new_s = ready_race(ready_time, storage);
       return [(list([]) as list<operation>), new_s];
     },

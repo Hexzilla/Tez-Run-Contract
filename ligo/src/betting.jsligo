@@ -19,7 +19,7 @@ export type betting_param =
 
 
 const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_storage => {
-  if (storage.status != 1) {
+  if (storage.status != (1 as nat)) {
     return failwith("NOT_ABLE_BET");
   } else {
     const betting: bet = {
