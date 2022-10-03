@@ -19,6 +19,7 @@ export type race_storage = {
   race_id : nat,
   status : nat,
   winner : nat,
+  ready_time : int,
   start_time : timestamp,
   bets : bet_list,
   rewards : reward_ledger,

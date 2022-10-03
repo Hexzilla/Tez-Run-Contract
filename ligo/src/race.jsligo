@@ -5,12 +5,25 @@ type race_storage = Types.race_storage;
 type return_type = [list<operation>, race_storage]
 
 export type race_param = 
-    ["Ready_race", int]
+    ["Set_ready_time", int]
+  | ["Ready_race"]
   | ["Start_race"]
   | ["Finish_race", nat];
 
 
-const ready_race = ([ready_time, storage] : [int, race_storage]) : race_storage => {
+const set_ready_time = ([ready_time, storage] : [int, race_storage]) : race_storage => {
+  if (ready_time <= 0) {
+    return failwith("INVALID_TIME");
+  } else {
+    return {
+      ...storage,
+      ready_time: ready_time,
+    };
+  }
+};
+
+const ready_race = (storage : race_storage) : race_storage => {
+  const ready_time = storage.ready_time;
   return {
     ...storage,
     status: 1 as nat,
@@ -48,19 +61,25 @@ const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => 
         }
       }
     };
+    const ready_time = storage.ready_time;
     return {
       ...storage,
       status: 1 as nat,
       winner: winner,
       rewards: new_rewards,
+      start_time: Tezos.get_now() + ready_time,
     };
   }
 };
 
 export const main = ([param, storage] : [race_param, race_storage]) : return_type => {
   match(param, {
-    Ready_race: (ready_time: int) => {
-      const new_s = ready_race(ready_time, storage);
+    Set_ready_time: (ready_time: int) => {
+      const new_s = set_ready_time(ready_time, storage);
+      return [(list([]) as list<operation>), new_s];
+    },
+    Ready_race: () => {
+      const new_s = ready_race(storage);
       return [(list([]) as list<operation>), new_s];
     },
     Start_race: () => {
