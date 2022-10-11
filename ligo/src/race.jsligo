@@ -1,8 +1,9 @@
 #import "types.jsligo" "Types"
 
 type reward = Types.reward;
+type token_map = Types.token_map;
 type tezrun_storage = Types.tezrun_storage;
-type return_type = [list<operation>, tezrun_storage]
+type return_type = [list<operation>, tezrun_storage];
 
 export type race_param = 
     ["Set_ready_time", int]
@@ -44,6 +45,17 @@ const start_race = (storage : tezrun_storage) : tezrun_storage => {
   };
 };
 
+const update_reward_tokens = ([tokens, token_id, amount] : [token_map, int, nat]) : token_map => {
+  return match(Map.find_opt(token_id, tokens), {
+    Some: old_amount => {
+      return Map.update(token_id, Some(old_amount + amount), tokens);
+    },
+    None: () => {
+      return Map.add(token_id, amount, tokens);
+    },
+  });
+};
+
 const finish_race = ([winner, storage] : [nat, tezrun_storage]) : return_type => {
   if (storage.status != (2 as nat)) {
     return failwith("RACE_NOT_STARTED");
@@ -51,28 +63,52 @@ const finish_race = ([winner, storage] : [nat, tezrun_storage]) : return_type =>
     let new_rewards = storage.rewards;
     for (const ticket of storage.tickets) {
       if (ticket.horse_id == winner) {
-
         if (ticket.token == 0) {
           // Calculate the tezos amount that can be rewarded
           const amount = ticket.tezos * ticket.payout;
 
-          // Check if reward already exists in reward map
-          const has_balance = Big_map.mem(ticket.address, new_rewards);
-          if (has_balance) {
-            const reward_opt: option<reward> = Big_map.find_opt(ticket.address, new_rewards);
-            const reward: reward = Option.unopt(reward_opt);
-            const new_reward = {
-              ...reward,
-              tezos: reward.tezos + amount
-            };
-            new_rewards = Big_map.update(ticket.address, Some(new_reward), new_rewards);
-          } else {
-            const reward: reward = {
-              tezos: amount,
-              tokens: Map.empty as Types.token_map
-            };
-            new_rewards = Big_map.add(ticket.address, reward, new_rewards);
-          }
+          // Update tezos amount in the rewards list
+          new_rewards = match(Big_map.find_opt(ticket.address, new_rewards), {
+            Some: reward => {
+              const new_reward = {
+                ...reward,
+                tezos: reward.tezos + amount
+              };
+              return Big_map.update(ticket.address, Some(new_reward), new_rewards);
+            },
+            None: () => {
+              const reward: reward = {
+                tezos: amount,
+                tokens: Map.empty as Types.token_map
+              };
+              return Big_map.add(ticket.address, reward, new_rewards);
+            },
+          });
+        }
+        else if (ticket.token == 1) {
+          // Calculate the token amount that can be rewarded
+          const amount = ticket.amount * ticket.payout;
+
+          // Update token amount in the rewards list
+          new_rewards = match(Big_map.find_opt(ticket.address, new_rewards), {
+            Some: reward => {
+              const tokens = update_reward_tokens(reward.tokens, 1, amount);
+              const new_reward = {
+                ...reward,
+                tokens,
+              }
+              return Big_map.update(ticket.address, Some(new_reward), new_rewards);
+            },
+            None: () => {
+              const new_reward: reward = {
+                tezos: 0 as tez,
+                tokens: Map.literal(list([
+                  [1, amount]
+                ])),
+              };
+              return Big_map.add(ticket.address, new_reward, new_rewards);
+            },
+          });
         }
       }
     };

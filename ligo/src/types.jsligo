@@ -10,7 +10,7 @@ export type ticket = {
 
 export type ticket_list = list<ticket>; 
 
-export type token_map = map<nat, nat>;
+export type token_map = map<int, nat>;
 
 export type reward = {
   tezos: tez,
