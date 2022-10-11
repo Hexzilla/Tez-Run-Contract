@@ -15,7 +15,7 @@ ligo compile storage tezrun.jsligo --entry-point main '
   winner: 0 as nat,
   ready_time: 300 as int,
   start_time: Tezos.get_now(),
-  bets: list([]) as Types.ticket_list,
+  tickets: list([]) as Types.ticket_list,
   rewards: Big_map.empty as Types.reward_ledger,
 
   uusd: None() as option<address>,

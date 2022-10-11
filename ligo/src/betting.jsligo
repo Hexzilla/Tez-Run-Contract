@@ -41,10 +41,10 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
         token: 0,
         amount: 0 as nat,
       };
-      const new_bets = list([ticket, ...storage.bets]);
+      const tickets = list([ticket, ...storage.tickets]);
       const new_s: tezrun_storage = {
         ...storage,
-        bets: new_bets,
+        tickets,
       };
       return [(list([]) as list<operation>), new_s];
     }
@@ -81,13 +81,12 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
         token: param.token,
         amount: param.amount,
       };
-      const new_bets: ticket_list = list([ticket, ...storage.bets]);
+      const tickets: ticket_list = list([ticket, ...storage.tickets]);
       const new_s : tezrun_storage = {
         ...storage,
-        bets: new_bets,
+        tickets,
       };
       return [(list([op]) as list<operation>), new_s];
-      //return [(list([]) as list<operation>), storage];
     }    
   }
   else {

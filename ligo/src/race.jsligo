@@ -40,7 +40,7 @@ const start_race = (storage : tezrun_storage) : tezrun_storage => {
     status: 2 as nat,
     start_time: Tezos.get_now(),
     winner: 0 as nat,
-    bets: list([]) as Types.ticket_list,
+    tickets: list([]) as Types.ticket_list,
   };
 };
 
@@ -49,7 +49,7 @@ const finish_race = ([winner, storage] : [nat, tezrun_storage]) : return_type =>
     return failwith("RACE_NOT_STARTED");
   } else {
     let new_rewards = storage.rewards;
-    for (const ticket of storage.bets) {
+    for (const ticket of storage.tickets) {
       if (ticket.horse_id == winner) {
 
         if (ticket.token == 0) {

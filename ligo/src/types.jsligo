@@ -29,7 +29,7 @@ export type tezrun_storage = {
   winner: nat,
   ready_time: int,
   start_time: timestamp,
-  bets: ticket_list,
+  tickets: ticket_list,
   rewards: reward_ledger,
 
   uusd: option<address>,
