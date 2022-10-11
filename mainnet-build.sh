@@ -21,7 +21,7 @@ ligo compile storage tezrun.jsligo --entry-point main '
     rewards: Big_map.empty as Types.reward_ledger
   },
   tokens: {
-    uusd: None() as option<address>,
+    uusd: Some("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW" as address),
   },
 }
 ' > ./.build/tezrun_storage.tz

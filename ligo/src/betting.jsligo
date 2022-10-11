@@ -44,10 +44,9 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
         token: 0,
         amount: 0 as nat,
       };
-      const new_bets: ticket_list = list([ticket, ...race.bets]);
       const new_race: race_storage = {
         ...race,
-        bets: new_bets,
+        bets: list([ticket, ...race.bets]),
       };
       const new_s: tezrun_storage = {
         ...storage,
@@ -60,12 +59,15 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
   else if (param.token == 1) {
     if (param.amount == (0 as nat)) {
       return failwith("INVALID_TOKEN_AMOUNT");
-    } else if (tokens.uusd == (None() as option<address>)) {
+    }
+    else if (tokens.uusd == (None() as option<address>)) {
       return failwith("NOT_SUPPORTED_TOKEN");
-    } else {
-      /// TODO: Transfer token to this contract
-      //const contract = Tezos.get_contract_with_error(tokens.uusd, "INVALID_CONTRACT") as contract<unit>;
-      //const op = Tezos.transaction(unit, reward.tezos, contract);
+    }
+    else {
+      // Transfer token to this contract
+      const contract_addr: address = Option.unopt(tokens.uusd);
+      const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<unit>;
+      const op = Tezos.transaction(unit, 10 as tez, contract);
 
       const ticket: ticket = {
         address: Tezos.get_sender(),
@@ -85,7 +87,7 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
         ...storage,
         race: new_race,
       };
-      return [(list([]) as list<operation>), new_s];
+      return [(list([op]) as list<operation>), new_s];
     }    
   }
   else {
