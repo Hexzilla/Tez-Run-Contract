@@ -1,7 +1,8 @@
 #import "types.jsligo" "Types"
 
-type bet = Types.bet;
-type bet_list = Types.bet_list; 
+type ticket = Types.ticket;
+type ticket_list = Types.ticket_list; 
+type reward = Types.reward;
 type reward_ledger = Types.reward_ledger;
 type race_storage = Types.race_storage;
 
@@ -11,6 +12,8 @@ type place_bet_param = {
   race_id : nat,
   horse_id : nat,
   payout : nat,
+  token : int,
+  amount : nat,
 };
 
 export type betting_param = 
@@ -21,19 +24,50 @@ export type betting_param =
 const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_storage => {
   if (storage.status != (1 as nat)) {
     return failwith("NOT_ABLE_BET");
-  } else {
-    const betting: bet = {
-      address: Tezos.get_sender(),
-      race_id: param.race_id,
-      horse_id: param.horse_id,
-      payout: param.payout,
-      amount: Tezos.get_amount(),
-    };
-    const new_bets: bet_list = list([betting, ...storage.bets]);
-    return {
-      ...storage,
-      bets: new_bets,
-    };
+  }
+  else if (param.token == 0) {
+    if (Tezos.get_amount() == (0 as tez)) {
+      return failwith("INVALID_TEZOS");
+    } else {
+      const ticket: ticket = {
+        address: Tezos.get_sender(),
+        race_id: param.race_id,
+        horse_id: param.horse_id,
+        payout: param.payout,
+        tezos: Tezos.get_amount(),
+        token: 0,
+        amount: 0 as nat,
+      };
+      const new_bets: ticket_list = list([ticket, ...storage.bets]);
+      return {
+        ...storage,
+        bets: new_bets,
+      };
+    }
+  }
+  else if (param.token == 1) {
+    if (param.amount == (0 as nat)) {
+      return failwith("INVALID_TOKEN_AMOUNT");
+    } else {
+      /// TODO: Transfer token to this contract
+      const ticket: ticket = {
+        address: Tezos.get_sender(),
+        race_id: param.race_id,
+        horse_id: param.horse_id,
+        payout: param.payout,
+        tezos: 0 as tez,
+        token: param.token,
+        amount: param.amount,
+      };
+      const new_bets: ticket_list = list([ticket, ...storage.bets]);
+      return {
+        ...storage,
+        bets: new_bets,
+      };
+    }    
+  }
+  else {
+    return failwith("INVALID_TOKEN");
   }
 };
 
@@ -41,18 +75,22 @@ const take_rewards = (storage: race_storage) : return_type => {
   const sender = Tezos.get_sender();
   const rewards = storage.rewards;
 
-  const amount_opt: option<tez> = Big_map.find_opt(sender, rewards);
-  const amount = Option.unopt_with_error(amount_opt, "NO_REWARDS");
-  if (amount > (0 as tez)) {
+  const reward_opt: option<reward> = Big_map.find_opt(sender, rewards);
+  const reward = Option.unopt_with_error(reward_opt, "NO_REWARDS");
+  if (reward.tezos > (0 as tez)) {
     const balance = Tezos.get_balance();
-    if (amount > balance) {
+    if (reward.tezos > balance) {
       return failwith("NO_ENOUGH_BALANCE");
     } else {
       const receiver = Tezos.get_contract_with_error(sender, "INVALID_ADDRESS") as contract<unit>;
-      const op = Tezos.transaction(unit, amount, receiver);
+      const op = Tezos.transaction(unit, reward.tezos, receiver);
 
+      const new_reward: reward = {
+        ...reward,
+        tezos: 0 as tez,
+      };
       // Reset reward for sender
-      const new_rewards = Big_map.update(sender, Some(0 as tez), rewards);
+      const new_rewards = Big_map.update(sender, Some(new_reward), rewards);
       const new_storage = {
         ...storage,
         rewards: new_rewards,

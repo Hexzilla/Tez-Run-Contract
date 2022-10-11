@@ -1,5 +1,7 @@
 #import "types.jsligo" "Types"
 
+type reward = Types.reward;
+
 type race_storage = Types.race_storage;
 
 type return_type = [list<operation>, race_storage]
@@ -39,7 +41,7 @@ const start_race = (storage : race_storage) : race_storage => {
     status: 2 as nat,
     start_time: Tezos.get_now(),
     winner: 0 as nat,
-    bets: list([]) as Types.bet_list,
+    bets: list([]) as Types.ticket_list,
   };
 };
 
@@ -48,16 +50,30 @@ const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => 
     return failwith("RACE_NOT_STARTED");
   } else {
     let new_rewards = storage.rewards;
-    for (const bet of storage.bets) {
-      if (bet.horse_id == winner) {
-        const reward = bet.amount * bet.payout;
-        const has_balance = Big_map.mem(bet.address, new_rewards);
-        if (has_balance) {
-          const balance_opt: option<tez> = Big_map.find_opt(bet.address, new_rewards);
-          const balance = Option.unopt(balance_opt);
-          new_rewards = Big_map.update(bet.address, Some(balance + reward), new_rewards);
-        } else {
-          new_rewards = Big_map.add(bet.address, reward, new_rewards);
+    for (const ticket of storage.bets) {
+      if (ticket.horse_id == winner) {
+
+        if (ticket.token == 0) {
+          // Calculate the tezos amount that can be rewarded
+          const amount = ticket.tezos * ticket.payout;
+
+          // Check if reward already exists in reward map
+          const has_balance = Big_map.mem(ticket.address, new_rewards);
+          if (has_balance) {
+            const reward_opt: option<reward> = Big_map.find_opt(ticket.address, new_rewards);
+            const reward: reward = Option.unopt(reward_opt);
+            const new_reward = {
+              ...reward,
+              tezos: reward.tezos + amount
+            };
+            new_rewards = Big_map.update(ticket.address, Some(new_reward), new_rewards);
+          } else {
+            const reward: reward = {
+              tezos: amount,
+              tokens: Map.empty as Types.token_map
+            };
+            new_rewards = Big_map.add(ticket.address, reward, new_rewards);
+          }
         }
       }
     };

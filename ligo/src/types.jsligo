@@ -4,16 +4,26 @@ export type admin_storage = {
     paused : bool
 };
 
-export type bet = {
+export type ticket = {
   address : address,
   race_id : nat,
   horse_id : nat,
-  amount : tez,
+  tezos : tez,
   payout : nat,
+  token : int,
+  amount : nat,
 };
 
-export type bet_list = list<bet>; 
-export type reward_ledger = big_map<address, tez>;
+export type ticket_list = list<ticket>; 
+
+export type token_map = map<nat, nat>;
+
+export type reward = {
+  tezos : tez,
+  tokens : token_map,
+};
+
+export type reward_ledger = big_map<address, reward>;
 
 export type race_storage = {
   race_id : nat,
@@ -21,6 +31,6 @@ export type race_storage = {
   winner : nat,
   ready_time : int,
   start_time : timestamp,
-  bets : bet_list,
+  bets : ticket_list,
   rewards : reward_ledger,
 };
