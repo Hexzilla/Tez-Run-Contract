@@ -58,36 +58,36 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
       return failwith("NOT_SUPPORTED_TOKEN");
     }
     else {
-      // Transfer token to this contract
-      // const contract_addr: address = Option.unopt(storage.uusd);
-      // const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<FA2.fa2_entry_points>;
-      // const dest: FA2.transfer_destination = {
-      //   to_: Tezos.get_self_address(),
-      //   token_id: 0 as nat,
-      //   amount: param.amount,
-      // };
-      // const transfer_params: FA2.transfer = {
-      //   from_: Tezos.get_sender(),
-      //   txs: list([dest]) as list<FA2.transfer_destination>,
-      // };
-      // const op = Tezos.transaction(transfer_params, 0 as tez, contract);
+      Transfer token to this contract
+      const contract_addr: address = Option.unopt(storage.uusd);
+      const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<FA2.fa2_entry_points>;
+      const dest: FA2.transfer_destination = {
+        to_: Tezos.get_self_address(),
+        token_id: 0 as nat,
+        amount: param.amount,
+      };
+      const transfer_params: FA2.transfer = {
+        from_: Tezos.get_sender(),
+        txs: list([dest]) as list<FA2.transfer_destination>,
+      };
+      const op = Tezos.transaction(transfer_params, 0 as tez, contract);
 
-      // const ticket: ticket = {
-      //   address: Tezos.get_sender(),
-      //   race_id: param.race_id,
-      //   horse_id: param.horse_id,
-      //   payout: param.payout,
-      //   tezos: 0 as tez,
-      //   token: param.token,
-      //   amount: param.amount,
-      // };
-      // const new_bets: ticket_list = list([ticket, ...race.bets]);
-      // const new_s : tezrun_storage = {
-      //   ...storage,
-      //   bets: new_bets,
-      // };
-      // return [(list([op]) as list<operation>), new_s];
-      return [(list([]) as list<operation>), storage];
+      const ticket: ticket = {
+        address: Tezos.get_sender(),
+        race_id: param.race_id,
+        horse_id: param.horse_id,
+        payout: param.payout,
+        tezos: 0 as tez,
+        token: param.token,
+        amount: param.amount,
+      };
+      const new_bets: ticket_list = list([ticket, ...race.bets]);
+      const new_s : tezrun_storage = {
+        ...storage,
+        bets: new_bets,
+      };
+      return [(list([op]) as list<operation>), new_s];
+      //return [(list([]) as list<operation>), storage];
     }    
   }
   else {
