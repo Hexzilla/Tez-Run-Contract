@@ -19,7 +19,10 @@ ligo compile storage tezrun.jsligo --entry-point main '
     start_time: Tezos.get_now(),
     bets: list([]) as Types.ticket_list,
     rewards: Big_map.empty as Types.reward_ledger
-  }
+  },
+  tokens: {
+    uusd: None() as option<address>,
+  },
 }
 ' > ./.build/tezrun_storage.tz
 

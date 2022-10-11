@@ -5,8 +5,9 @@ type ticket_list = Types.ticket_list;
 type reward = Types.reward;
 type reward_ledger = Types.reward_ledger;
 type race_storage = Types.race_storage;
+type tezrun_storage = Types.tezrun_storage;
 
-type return_type = [list<operation>, race_storage];
+type return_type = [list<operation>, tezrun_storage];
 
 type place_bet_param = {
   race_id : nat,
@@ -21,9 +22,12 @@ export type betting_param =
   | ["Take_rewards"];
 
 
-const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_storage => {
+const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : return_type => {
+  const race = storage.race;
+  const tokens = storage.tokens;
+
   /// Check if the race is ready state.
-  if (storage.status != (1 as nat)) {
+  if (race.status != (1 as nat)) {
     return failwith("RACE_IS_NOT_READY_STATE");
   }
   /// Betting by tezos
@@ -40,19 +44,29 @@ const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_st
         token: 0,
         amount: 0 as nat,
       };
-      const new_bets: ticket_list = list([ticket, ...storage.bets]);
-      return {
-        ...storage,
+      const new_bets: ticket_list = list([ticket, ...race.bets]);
+      const new_race: race_storage = {
+        ...race,
         bets: new_bets,
       };
+      const new_s: tezrun_storage = {
+        ...storage,
+        race: new_race,
+      };
+      return [(list([]) as list<operation>), new_s];
     }
   }
   /// Betting by token (uUSD)
   else if (param.token == 1) {
     if (param.amount == (0 as nat)) {
       return failwith("INVALID_TOKEN_AMOUNT");
+    } else if (tokens.uusd == (None() as option<address>)) {
+      return failwith("NOT_SUPPORTED_TOKEN");
     } else {
       /// TODO: Transfer token to this contract
+      //const contract = Tezos.get_contract_with_error(tokens.uusd, "INVALID_CONTRACT") as contract<unit>;
+      //const op = Tezos.transaction(unit, reward.tezos, contract);
+
       const ticket: ticket = {
         address: Tezos.get_sender(),
         race_id: param.race_id,
@@ -62,11 +76,16 @@ const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_st
         token: param.token,
         amount: param.amount,
       };
-      const new_bets: ticket_list = list([ticket, ...storage.bets]);
-      return {
-        ...storage,
+      const new_bets: ticket_list = list([ticket, ...race.bets]);
+      const new_race: race_storage = {
+        ...race,
         bets: new_bets,
       };
+      const new_s : tezrun_storage = {
+        ...storage,
+        race: new_race,
+      };
+      return [(list([]) as list<operation>), new_s];
     }    
   }
   else {
@@ -74,9 +93,9 @@ const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_st
   }
 };
 
-const take_rewards = (storage: race_storage) : return_type => {
+const take_rewards = (storage: tezrun_storage) : return_type => {
   const sender = Tezos.get_sender();
-  const rewards = storage.rewards;
+  const rewards = storage.race.rewards;
 
   const reward_opt: option<reward> = Big_map.find_opt(sender, rewards);
   const reward = Option.unopt_with_error(reward_opt, "NO_REWARDS");
@@ -96,7 +115,10 @@ const take_rewards = (storage: race_storage) : return_type => {
       const new_rewards = Big_map.update(sender, Some(new_reward), rewards);
       const new_storage = {
         ...storage,
-        rewards: new_rewards,
+        race: {
+          ...storage.race,
+          rewards: new_rewards,
+        }
       }
       return [list([op]), new_storage];
     }
@@ -104,12 +126,9 @@ const take_rewards = (storage: race_storage) : return_type => {
   return [list([]), storage];
 }
 
-export const main = ([param, storage] : [betting_param, race_storage]) : return_type => {
+export const main = ([param, storage] : [betting_param, tezrun_storage]) : return_type => {
   match(param, {
-    Place_bet: (p: place_bet_param) => {
-      const new_s = place_bet(p, storage);
-      return [list([]), new_s];
-    },
+    Place_bet: (p: place_bet_param) => place_bet(p, storage),
     Take_rewards: () => take_rewards(storage),
   });
 };

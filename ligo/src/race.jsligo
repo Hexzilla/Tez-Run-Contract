@@ -1,10 +1,9 @@
 #import "types.jsligo" "Types"
 
 type reward = Types.reward;
-
 type race_storage = Types.race_storage;
-
-type return_type = [list<operation>, race_storage]
+type tezrun_storage = Types.tezrun_storage;
+type return_type = [list<operation>, tezrun_storage]
 
 export type race_param = 
     ["Set_ready_time", int]
@@ -13,30 +12,30 @@ export type race_param =
   | ["Finish_race", nat];
 
 
-const set_ready_time = ([ready_time, storage] : [int, race_storage]) : race_storage => {
+const set_ready_time = ([ready_time, race] : [int, race_storage]) : race_storage => {
   if (ready_time <= 0) {
     return failwith("INVALID_TIME");
   } else {
     return {
-      ...storage,
+      ...race,
       ready_time: ready_time,
     };
   }
 };
 
-const ready_race = (storage : race_storage) : race_storage => {
-  const ready_time = storage.ready_time;
+const ready_race = (race : race_storage) : race_storage => {
+  const ready_time = race.ready_time;
   return {
-    ...storage,
+    ...race,
     status: 1 as nat,
     start_time: Tezos.get_now() + ready_time,
   };
 };
 
-const start_race = (storage : race_storage) : race_storage => {
-  const new_race_id = (1 as nat) + storage.race_id;
+const start_race = (race : race_storage) : race_storage => {
+  const new_race_id = (1 as nat) + race.race_id;
   return {
-    ...storage,
+    ...race,
     race_id: new_race_id,
     status: 2 as nat,
     start_time: Tezos.get_now(),
@@ -45,12 +44,13 @@ const start_race = (storage : race_storage) : race_storage => {
   };
 };
 
-const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => {
-  if (storage.status != (2 as nat)) {
+const finish_race = ([winner, storage] : [nat, tezrun_storage]) : tezrun_storage => {
+  const race = storage.race;
+  if (race.status != (2 as nat)) {
     return failwith("RACE_NOT_STARTED");
   } else {
-    let new_rewards = storage.rewards;
-    for (const ticket of storage.bets) {
+    let new_rewards = race.rewards;
+    for (const ticket of race.bets) {
       if (ticket.horse_id == winner) {
 
         if (ticket.token == 0) {
@@ -77,29 +77,45 @@ const finish_race = ([winner, storage] : [nat, race_storage]) : race_storage => 
         }
       }
     };
-    const ready_time = storage.ready_time;
-    return {
-      ...storage,
+    const ready_time = race.ready_time;
+    const new_race : race_storage = {
+      ...race,
       status: 1 as nat,
       winner: winner,
       rewards: new_rewards,
       start_time: Tezos.get_now() + ready_time,
     };
+    return {
+      ...storage,
+      race: new_race,
+    };
   }
 };
 
-export const main = ([param, storage] : [race_param, race_storage]) : return_type => {
+export const main = ([param, storage] : [race_param, tezrun_storage]) : return_type => {
   match(param, {
     Set_ready_time: (ready_time: int) => {
-      const new_s = set_ready_time(ready_time, storage);
+      const race = set_ready_time(ready_time, storage.race);
+      const new_s : tezrun_storage = {
+        ...storage,
+        race,
+      };
       return [(list([]) as list<operation>), new_s];
     },
     Ready_race: () => {
-      const new_s = ready_race(storage);
+      const race = ready_race(storage.race);
+      const new_s : tezrun_storage = {
+        ...storage,
+        race,
+      };
       return [(list([]) as list<operation>), new_s];
     },
     Start_race: () => {
-      const new_s = start_race(storage);
+      const race = start_race(storage.race);
+      const new_s : tezrun_storage = {
+        ...storage,
+        race,
+      };
       return [(list([]) as list<operation>), new_s];
     },
     Finish_race: (winner: nat) => {

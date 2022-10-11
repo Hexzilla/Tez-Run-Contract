@@ -3,10 +3,7 @@
 #import "race.jsligo" "Race"
 #import "betting.jsligo" "Betting"
 
-type tezrun_storage = {
-  admin : Types.admin_storage,
-  race : Types.race_storage,
-};
+type tezrun_storage = Types.tezrun_storage;
 
 type tezrun_param =
     ["Admin", Admin.simple_admin]
@@ -29,19 +26,11 @@ export const main = ([param, storage] : [tezrun_param, tezrun_storage]) : return
     },
     Race: (p: Race.race_param) => {
       Admin.fail_if_not_admin(storage.admin);
-      const [ops, race] = Race.main(p, storage.race);
-      const s = {
-        ...storage,
-        race: race,
-      };
+      const [ops, s] = Race.main(p, storage);
       return [ops, s];
     },
     Betting: (p: Betting.betting_param) => {
-      const [ops, race] = Betting.main(p, storage.race);
-      const s = {
-        ...storage,
-        race: race,
-      };
+      const [ops, s] = Betting.main(p, storage);
       return [ops, s];
     }
   });

@@ -34,3 +34,13 @@ export type race_storage = {
   bets : ticket_list,
   rewards : reward_ledger,
 };
+
+export type token_storage = {
+  uusd : option<address>,
+};
+
+export type tezrun_storage = {
+  admin : admin_storage,
+  race : race_storage,
+  tokens : token_storage,
+};
