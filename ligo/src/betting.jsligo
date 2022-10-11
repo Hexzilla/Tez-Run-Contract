@@ -22,12 +22,14 @@ export type betting_param =
 
 
 const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_storage => {
+  /// Check if the race is ready state.
   if (storage.status != (1 as nat)) {
-    return failwith("NOT_ABLE_BET");
+    return failwith("RACE_IS_NOT_READY_STATE");
   }
+  /// Betting by tezos
   else if (param.token == 0) {
     if (Tezos.get_amount() == (0 as tez)) {
-      return failwith("INVALID_TEZOS");
+      return failwith("INVALID_TEZOS_AMOUNT");
     } else {
       const ticket: ticket = {
         address: Tezos.get_sender(),
@@ -45,6 +47,7 @@ const place_bet = ([param, storage] : [place_bet_param, race_storage]) : race_st
       };
     }
   }
+  /// Betting by token (uUSD)
   else if (param.token == 1) {
     if (param.amount == (0 as nat)) {
       return failwith("INVALID_TOKEN_AMOUNT");
