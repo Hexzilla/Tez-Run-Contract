@@ -58,9 +58,9 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
       return failwith("NOT_SUPPORTED_TOKEN");
     }
     else {
-      Transfer token to this contract
+      // Transfer token to this contract
       const contract_addr: address = Option.unopt(storage.uusd);
-      const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<FA2.fa2_entry_points>;
+      const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<FA2.transfer>;
       const dest: FA2.transfer_destination = {
         to_: Tezos.get_self_address(),
         token_id: 0 as nat,
@@ -81,7 +81,7 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
         token: param.token,
         amount: param.amount,
       };
-      const new_bets: ticket_list = list([ticket, ...race.bets]);
+      const new_bets: ticket_list = list([ticket, ...storage.bets]);
       const new_s : tezrun_storage = {
         ...storage,
         bets: new_bets,

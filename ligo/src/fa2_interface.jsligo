@@ -1,0 +1,29 @@
+export type transfer_destination = {
+  to_ : address,
+  token_id : nat,
+  amount : nat,
+};
+
+export type transfer = {
+  from_ : address,
+  txs : list<transfer_destination>,
+};
+
+export type balance_of_request = {
+  owner : address,
+  token_id : nat,
+};
+
+type balance_of_response = {
+  request : balance_of_request,
+  balance : nat,
+};
+
+type balance_of_param = {
+  requests : list<balance_of_request>,
+  callback : contract<list<balance_of_response>>,
+};
+
+export type fa2_entry_points = 
+  | ["Transfer", list<transfer>]
+  | ["Balance_of", balance_of_param];
