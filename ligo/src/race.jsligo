@@ -11,6 +11,7 @@ export type race_param =
   | ["Start_race"]
   | ["Finish_race", nat];
 
+const empty_operation_list = (list([]) as list<operation>);
 
 const set_ready_time = ([ready_time, race] : [int, race_storage]) : race_storage => {
   if (ready_time <= 0) {
@@ -44,7 +45,7 @@ const start_race = (race : race_storage) : race_storage => {
   };
 };
 
-const finish_race = ([winner, storage] : [nat, tezrun_storage]) : tezrun_storage => {
+const finish_race = ([winner, storage] : [nat, tezrun_storage]) : return_type => {
   const race = storage.race;
   if (race.status != (2 as nat)) {
     return failwith("RACE_NOT_STARTED");
@@ -78,17 +79,18 @@ const finish_race = ([winner, storage] : [nat, tezrun_storage]) : tezrun_storage
       }
     };
     const ready_time = race.ready_time;
-    const new_race : race_storage = {
+    const new_race: race_storage = {
       ...race,
       status: 1 as nat,
       winner: winner,
       rewards: new_rewards,
       start_time: Tezos.get_now() + ready_time,
     };
-    return {
+    const new_s: tezrun_storage = {
       ...storage,
       race: new_race,
     };
+    return [empty_operation_list, new_s];
   }
 };
 
@@ -100,7 +102,7 @@ export const main = ([param, storage] : [race_param, tezrun_storage]) : return_t
         ...storage,
         race,
       };
-      return [(list([]) as list<operation>), new_s];
+      return [empty_operation_list, new_s];
     },
     Ready_race: () => {
       const race = ready_race(storage.race);
@@ -108,7 +110,7 @@ export const main = ([param, storage] : [race_param, tezrun_storage]) : return_t
         ...storage,
         race,
       };
-      return [(list([]) as list<operation>), new_s];
+      return [empty_operation_list, new_s];
     },
     Start_race: () => {
       const race = start_race(storage.race);
@@ -116,11 +118,10 @@ export const main = ([param, storage] : [race_param, tezrun_storage]) : return_t
         ...storage,
         race,
       };
-      return [(list([]) as list<operation>), new_s];
+      return [empty_operation_list, new_s];
     },
     Finish_race: (winner: nat) => {
-      const new_s = finish_race(winner, storage);
-      return [(list([]) as list<operation>), new_s];
+      return finish_race(winner, storage);
     }
   })
 };
