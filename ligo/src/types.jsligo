@@ -1,17 +1,11 @@
-export type admin_storage = {
-    admin : address,
-    pending_admin : option<address>,
-    paused : bool
-};
-
 export type ticket = {
-  address : address,
-  race_id : nat,
-  horse_id : nat,
-  tezos : tez,
-  payout : nat,
-  token : int,
-  amount : nat,
+  address: address,
+  race_id: nat,
+  horse_id: nat,
+  tezos: tez,
+  payout: nat,
+  token: int,
+  amount: nat,
 };
 
 export type ticket_list = list<ticket>; 
@@ -19,28 +13,24 @@ export type ticket_list = list<ticket>;
 export type token_map = map<nat, nat>;
 
 export type reward = {
-  tezos : tez,
-  tokens : token_map,
+  tezos: tez,
+  tokens: token_map,
 };
 
 export type reward_ledger = big_map<address, reward>;
 
-export type race_storage = {
-  race_id : nat,
-  status : nat,
-  winner : nat,
-  ready_time : int,
-  start_time : timestamp,
-  bets : ticket_list,
-  rewards : reward_ledger,
-};
-
-export type token_storage = {
-  uusd : option<address>,
-};
-
 export type tezrun_storage = {
-  admin : admin_storage,
-  race : race_storage,
-  tokens : token_storage,
+  admin: address,
+  pending_admin: option<address>,
+  paused: bool,
+
+  race_id: nat,
+  status: nat,
+  winner: nat,
+  ready_time: int,
+  start_time: timestamp,
+  bets: ticket_list,
+  rewards: reward_ledger,
+
+  uusd: option<address>,
 };

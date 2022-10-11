@@ -17,15 +17,10 @@ export type return_type = [list<operation>, tezrun_storage];
 export const main = ([param, storage] : [tezrun_param, tezrun_storage]) : return_type => {
   match(param, {
     Admin: (p: Admin.simple_admin) => {
-      const [ops, admin] = Admin.main(p, storage.admin);
-      const s = {
-        ...storage,
-        admin: admin
-      };
-      return [ops, s];
+      return Admin.main(p, storage);
     },
     Race: (p: Race.race_param) => {
-      Admin.fail_if_not_admin(storage.admin);
+      Admin.fail_if_not_admin(storage);
       return Race.main(p, storage);
     },
     Betting: (p: Betting.betting_param) => {

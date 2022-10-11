@@ -5,18 +5,18 @@ export type simple_admin =
   | ["Confirm_admin", unit]
   | ["Pause", bool];
 
-type admin_storage = Types.admin_storage;
+type tezrun_storage = Types.tezrun_storage;
 
-type return_type = [list<operation>, admin_storage];
+type return_type = [list<operation>, tezrun_storage];
 
-const set_admin = ([new_admin, s] : [address, admin_storage]) : admin_storage => {
+const set_admin = ([new_admin, s] : [address, tezrun_storage]) : tezrun_storage => {
   return {
     ...s,
     pending_admin: Some(new_admin)
   };
 };
 
-const confirm_new_admin = (s : admin_storage) : admin_storage => {
+const confirm_new_admin = (s : tezrun_storage) : tezrun_storage => {
   return match(s.pending_admin, {
     None: () => failwith("NO_PENDING_ADMIN"),
     Some: (pending: address) => {
@@ -33,14 +33,14 @@ const confirm_new_admin = (s : admin_storage) : admin_storage => {
   });
 };
 
-const pause = ([paused, s]: [bool, admin_storage]) : admin_storage => {
+const pause = ([paused, s]: [bool, tezrun_storage]) : tezrun_storage => {
   return {
     ...s,
     paused: paused,
   };
 };
 
-const fail_if_not_admin = (a : admin_storage) : unit => {
+const fail_if_not_admin = (a : tezrun_storage) : unit => {
   if (Tezos.get_sender() != a.admin) {
     return failwith("NOT_AN_ADMIN");
   } else {
@@ -48,7 +48,7 @@ const fail_if_not_admin = (a : admin_storage) : unit => {
   };
 };
 
-const fail_if_paused = (a : admin_storage) : unit => {
+const fail_if_paused = (a : tezrun_storage) : unit => {
   if (a.paused) {
     return failwith("PAUSED");
   } else {
@@ -56,7 +56,7 @@ const fail_if_paused = (a : admin_storage) : unit => {
   };
 };
 
-export const main = ([param, storage] : [simple_admin, admin_storage]) : return_type => {
+export const main = ([param, storage] : [simple_admin, tezrun_storage]) : return_type => {
   match(param, {
     Set_admin: (new_admin: address) => {
       fail_if_not_admin(storage);
