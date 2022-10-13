@@ -95,13 +95,6 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
   }
 };
 
-const get_token_amount = (tokens: Types.token_map) : nat => {
-  return match(Map.find_opt(1, tokens), {
-    Some: amount => amount,
-    None: () => 0 as nat,
-  });
-}
-
 const take_rewards = (storage: tezrun_storage) : return_type => {
   const sender = Tezos.get_sender();
   const rewards = storage.rewards;
@@ -128,35 +121,32 @@ const take_rewards = (storage: tezrun_storage) : return_type => {
       }
       return [list([op]), new_s];
     }
-  } else if (Map.size(reward.tokens) > 0) {
-    const amount = get_token_amount(reward.tokens);
-    if (amount > 0) {
-      const contract_addr: address = Option.unopt(storage.uusd);
-      const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<FA2.transfer>;
-      const dest: FA2.transfer_destination = {
-        to_: Tezos.get_sender(),
-        token_id: 0 as nat,
-        amount: amount,
-      };
-      const transfer_params: FA2.transfer = {
-        from_: Tezos.get_self_address(),
-        txs: list([dest]) as list<FA2.transfer_destination>,
-      };
-      const op = Tezos.transaction(transfer_params, 0 as tez, contract);
+  } else if (reward.tokens > (0 as nat)) {
+    const amount = reward.tokens;
+    const contract_addr: address = Option.unopt(storage.uusd);
+    const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<FA2.transfer>;
+    const dest: FA2.transfer_destination = {
+      to_: Tezos.get_sender(),
+      token_id: 0 as nat,
+      amount: amount,
+    };
+    const transfer_params: FA2.transfer = {
+      from_: Tezos.get_self_address(),
+      txs: list([dest]) as list<FA2.transfer_destination>,
+    };
+    const op = Tezos.transaction(transfer_params, 0 as tez, contract);
 
-      // Update tokens
-      const new_tokens = Map.update((1, Some(0 as nat), reward.tokens);
-      const new_reward: reward = {
-        ...reward,
-        tokens: new_tokens,
-      };
-      const new_rewards = Big_map.update(sender, Some(new_reward), rewards);
-      const new_s = {
-        ...storage,
-        rewards: new_rewards,
-      }
-      return [list([op]), new_s];
+    // Update tokens
+    const new_reward: reward = {
+      ...reward,
+      tokens: 0 as nat,
+    };
+    const new_rewards = Big_map.update(sender, Some(new_reward), rewards);
+    const new_s = {
+      ...storage,
+      rewards: new_rewards,
     }
+    return [list([op]), new_s];
   }
 
   return [list([]), storage];
