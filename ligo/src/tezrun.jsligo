@@ -11,7 +11,7 @@ type tezrun_param =
   | ["Betting", Betting.betting_param];
 
 
-export type return_type = [list<operation>, tezrun_storage];
+type return_type = [list<operation>, tezrun_storage];
 
 
 export const main = ([param, storage] : [tezrun_param, tezrun_storage]) : return_type => {
