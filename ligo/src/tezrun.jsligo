@@ -1,6 +1,6 @@
 #import "types.jsligo" "Types"
 #import "admin.jsligo" "Admin"
-#import "race.jsligo" "Race"
+#import "races.jsligo" "Race"
 #import "betting.jsligo" "Betting"
 
 type tezrun_storage = Types.tezrun_storage;
