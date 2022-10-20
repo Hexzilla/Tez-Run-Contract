@@ -1,3 +1,5 @@
+tezos-client --endpoint https://mainnet.tezos.marigold.dev config update
+
 tezos-client --endpoint https://rpcalpha.tzbeta.net config update
 
 tezos-client --endpoint https://mainnet.api.tez.ie config update

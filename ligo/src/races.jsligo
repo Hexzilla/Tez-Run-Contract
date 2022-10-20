@@ -45,7 +45,7 @@ const start_race = (storage : tezrun_storage) : tezrun_storage => {
   };
 };
 
-const update_reward_tezos = ([rewards, address, amount] : [reward_ledger, address, nat]) : reward_ledger => {
+const update_reward_tezos = ([rewards, address, amount] : [reward_ledger, address, tez]) : reward_ledger => {
   return match(Big_map.find_opt(address, rewards), {
     Some: reward => {
       const tezos = reward.tezos + amount;

@@ -9,6 +9,8 @@ export type transfer = {
   txs : list<transfer_destination>,
 };
 
+export type transfer_params = list<transfer>;
+
 export type balance_of_request = {
   owner : address,
   token_id : nat,
@@ -25,5 +27,4 @@ type balance_of_param = {
 };
 
 export type fa2_entry_points = 
-  | ["Transfer", list<transfer>]
-  | ["Balance_of", balance_of_param];
+  | ["Transfer", list<transfer>];

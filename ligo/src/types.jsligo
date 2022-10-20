@@ -1,6 +1,5 @@
 export type ticket = {
   address: address,
-  race_id: nat,
   horse_id: nat,
   tezos: tez,
   payout: nat,

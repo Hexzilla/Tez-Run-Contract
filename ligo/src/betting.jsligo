@@ -10,7 +10,6 @@ type tezrun_storage = Types.tezrun_storage;
 type return_type = [list<operation>, tezrun_storage];
 
 type place_bet_param = {
-  race_id : nat,
   horse_id : nat,
   payout : nat,
   token : int,
@@ -35,7 +34,6 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
     } else {
       const ticket: ticket = {
         address: Tezos.get_sender(),
-        race_id: param.race_id,
         horse_id: param.horse_id,
         payout: param.payout,
         tezos: Tezos.get_amount(),
@@ -58,21 +56,20 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
     else {
       // Transfer token to this contract
       const contract_addr: address = Option.unopt(storage.uusd);
-      const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<FA2.transfer>;
+      const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<FA2.transfer_params>;
       const dest: FA2.transfer_destination = {
         to_: Tezos.get_self_address(),
         token_id: 0 as nat,
         amount: param.amount,
       };
-      const transfer_params: FA2.transfer = {
+      const transfer_params: FA2.transfer_params = list([{
         from_: Tezos.get_sender(),
         txs: list([dest]) as list<FA2.transfer_destination>,
-      };
+      }]);
       const op = Tezos.transaction(transfer_params, 0 as tez, contract);
 
       const ticket: ticket = {
         address: Tezos.get_sender(),
-        race_id: param.race_id,
         horse_id: param.horse_id,
         payout: param.payout,
         tezos: 0 as tez,
@@ -118,16 +115,16 @@ const take_rewards = (storage: tezrun_storage) : return_type => {
   } else if (reward.tokens > (0 as nat)) {
     const amount = reward.tokens;
     const contract_addr: address = Option.unopt(storage.uusd);
-    const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<FA2.transfer>;
+    const contract = Tezos.get_contract_with_error(contract_addr, "INVALID_CONTRACT") as contract<FA2.transfer_params>;
     const dest: FA2.transfer_destination = {
       to_: Tezos.get_sender(),
       token_id: 0 as nat,
       amount: amount,
     };
-    const transfer_params: FA2.transfer = {
+    const transfer_params: FA2.transfer_params = list([{
       from_: Tezos.get_self_address(),
       txs: list([dest]) as list<FA2.transfer_destination>,
-    };
+    }]);
     const op = Tezos.transaction(transfer_params, 0 as tez, contract);
 
     // Update tokens
