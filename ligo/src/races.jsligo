@@ -41,7 +41,6 @@ const start_race = (storage : tezrun_storage) : tezrun_storage => {
     status: 2 as nat,
     start_time: Tezos.get_now(),
     winner: 0 as nat,
-    tickets: list([]) as Types.ticket_list,
   };
 };
 
@@ -102,6 +101,7 @@ const finish_race = ([winner, storage] : [nat, tezrun_storage]) : return_type =>
       status: 1 as nat,
       winner: winner,
       rewards: rewards,
+      tickets: list([]) as Types.ticket_list,
       start_time: Tezos.get_now() + ready_time,
     };
     return [empty_operation_list, new_s];
