@@ -81,7 +81,7 @@ const finish_race = ([winner, storage] : [nat, tezrun_storage]) : return_type =>
       if (ticket.horse_id == winner) {
         if (ticket.token == 0) {
           // Calculate the tezos amount that can be rewarded
-          const amount = ticket.tezos * ticket.payout;
+          const amount = (1 as mutez) * ticket.payout;
 
           // Update tezos amount in the rewards list
           rewards = update_reward_tezos(rewards, ticket.address, amount);
