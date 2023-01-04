@@ -8,7 +8,8 @@ running tezrun.tz \
             (Pair 300 {})
             "1970-01-01T00:00:59Z"
             0)
-      (Pair {} (Some "KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW"))
+      (Pair 0 {})
+      (Some "KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW")
       0)
 ' \
 --burn-cap 1.1165

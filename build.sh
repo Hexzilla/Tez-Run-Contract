@@ -10,6 +10,7 @@ ligo compile storage tezrun.jsligo --entry-point main '
   pending_admin: None() as option<address>,
   paused: false,
 
+  ticket_id: 0 as nat,
   race_id: 0 as nat,
   status: 0 as nat,
   winner: 0 as nat,

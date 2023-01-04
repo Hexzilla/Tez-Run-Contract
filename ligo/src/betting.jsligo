@@ -32,7 +32,9 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
     if (Tezos.get_amount() == (0 as tez)) {
       return failwith("INVALID_TEZOS_AMOUNT");
     } else {
+      const ticket_id = storage.ticket_id + (1 as nat);
       const ticket: ticket = {
+        id: ticket_id,
         address: Tezos.get_sender(),
         horse_id: param.horse_id,
         payout: param.payout,
@@ -41,7 +43,11 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
         amount: 0 as nat,
       };
       const tickets = list([ticket, ...storage.tickets]);
-      const new_s: tezrun_storage = { ...storage, tickets };
+      const new_s: tezrun_storage = {
+        ...storage,
+        ticket_id,
+        tickets
+      };
       return [empty_operation_list, new_s];
     }
   }
@@ -68,7 +74,9 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
       }]);
       const op = Tezos.transaction(transfer_params, 0 as tez, contract);
 
+      const ticket_id = storage.ticket_id + (1 as nat);
       const ticket: ticket = {
+        id: ticket_id,
         address: Tezos.get_sender(),
         horse_id: param.horse_id,
         payout: param.payout,
@@ -77,7 +85,11 @@ const place_bet = ([param, storage] : [place_bet_param, tezrun_storage]) : retur
         amount: param.amount,
       };
       const tickets: ticket_list = list([ticket, ...storage.tickets]);
-      const new_s : tezrun_storage = { ...storage, tickets };
+      const new_s : tezrun_storage = {
+        ...storage,
+        ticket_id,
+        tickets
+      };
       return [(list([op]) as list<operation>), new_s];
     }
   }
